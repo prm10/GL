@@ -6,7 +6,7 @@ close all;clear;clc;
 % flag：0代表稀疏排列，1代表紧致排列
 n=10;
 r1=2;
-r2=12;
+r2=5;
 o2=[27,15];
 flag=1;
 area1=area_in_a_big_circle(n,r1,r2,o2,flag);

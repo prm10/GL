@@ -1,4 +1,4 @@
-function [err,w_i,dw_i]=LSTM_ff(varargin)
+function [err,delta_y]=LSTM_ff(varargin)
 % clc;clear;close all;
 if nargin==0
     rand('seed',3);
@@ -29,6 +29,9 @@ if nargin==0
     w_k=rand(N,outdims);
 else
     args=varargin{1};
+    delta=varargin{2};
+    post=varargin{3};
+    pos=varargin{4};
     [T,M]=size(args.input);
     N=args.numblocks;
     outdims=size(args.label,2);
@@ -60,12 +63,13 @@ in2=zeros(T,N);
 f1=zeros(T,N);
 f2=zeros(T,N);
 z1=zeros(T,N);
+z1=zeros(T,N);
 c=zeros(T,N);
 o1=zeros(T,N);
 o2=zeros(T,N);
 %% first time-step
-% input gates
 t=1;
+% input gates
 in1(t,:)=x(t,:)*w_i;
 in2(t,:)=sigmoid(in1(t,:));
 % forget gates
@@ -73,7 +77,8 @@ f1(t,:)=x(t,:)*w_f;
 f2(t,:)=sigmoid(f1(t,:));
 % cells
 z1(t,:)=x(t,:)*w_z;
-c(t,:)=in2(t,:).*tanh(z1(t,:));
+z2(t,:)=tanh(z1(t,:));
+c(t,:)=in2(t,:).*z2(t,:);
 % output gates
 o1(t,:)=x(t,:)*w_o+c(t,:).*p_o;
 o2(t,:)=sigmoid(o1(t,:));
@@ -85,6 +90,9 @@ for t=2:T
     in2(t,:)=sigmoid(in1(t,:));
     % forget gates
     f1(t,:)=x(t,:)*w_f+y(t-1,:)*r_f+c(t-1,:).*p_f;
+%     if t==T
+%         f1(post,pos)=f1(post,pos)+delta;
+%     end
     f2(t,:)=sigmoid(f1(t,:));
     % cells
     z1(t,:)=x(t,:)*w_z+y(t-1,:)*r_z;
@@ -95,10 +103,11 @@ for t=2:T
     o2(t,:)=sigmoid(o1(t,:));
     y(t,:)=o2(t,:).*tanh(c(t,:));
 end
+y(post,pos)=y(post,pos)+delta;
 temp=y*w_k;
 temp=exp(temp-max(temp,[],2)*ones(1,size(temp,2)));
 data_out =temp./(sum(temp,2)*ones(1,size(temp,2)));
-err=-sum(sum(label.* log(data_out)))/T;
+err=-sum(sum(label.* log(data_out)));
 %% ·´Ïò´«²¥
 t=T;
 delta_k=-(label-data_out);
@@ -106,9 +115,9 @@ delta_y(t,:)=delta_k(t,:)*w_k';
 delta_o(t,:)=delta_y(t,:).*tanh(c(t,:)).*dsigmoid(o2(t,:));
 delta_c(t,:)=delta_y(t,:).*o2(t,:).*dtanh(tanh(c(t,:)))+p_o.*delta_o(t,:);
 delta_f(t,:)=delta_c(t,:).*c(t-1,:).*dsigmoid(f2(t,:));
-delta_i(t,:)=delta_c(t,:).*z1(t,:).*dsigmoid(in2(t,:));
-delta_z(t,:)=delta_c(t,:).*in1(t,:).*dtanh(z2(t,:));
-for t=T-1:1
+delta_i(t,:)=delta_c(t,:).*z2(t,:).*dsigmoid(in2(t,:));
+delta_z(t,:)=delta_c(t,:).*in2(t,:).*dtanh(z2(t,:));
+for t=T-1:-1:1
     delta_y(t,:)=delta_k(t,:)*w_k'+delta_z(t+1,:)*r_z'+delta_i(t+1,:)*r_i'+delta_f(t+1,:)*r_f'+delta_o(t+1,:)*r_o';
     delta_o(t,:)=delta_y(t,:).*tanh(c(t,:)).*dsigmoid(o2(t,:));
     delta_c(t,:)=delta_y(t,:).*o2(t,:).*dtanh(tanh(c(t,:)))+p_o.*delta_o(t,:)+p_i.*delta_i(t+1,:)...
@@ -118,11 +127,11 @@ for t=T-1:1
     else
         delta_f(t,:)=delta_c(t,:).*c(t-1,:).*dsigmoid(f2(t,:));
     end
-    delta_i(t,:)=delta_c(t,:).*z1(t,:).*dsigmoid(in2(t,:));
-    delta_z(t,:)=delta_c(t,:).*in1(t,:).*dtanh(z2(t,:));
+    delta_i(t,:)=delta_c(t,:).*z2(t,:).*dsigmoid(in2(t,:));
+    delta_z(t,:)=delta_c(t,:).*in2(t,:).*dtanh(z2(t,:));
 end
 
-dw_k=x'*delta_k;
+dw_k=y'*delta_k;
 
 dw_o=x'*delta_o;
 dw_f=x'*delta_f;
