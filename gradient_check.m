@@ -4,6 +4,7 @@ args.input=rand(15,3);
 args.label=[mean(args.input,2)<=0.5 mean(args.input,2)>0.5];
 args.numblocks=5;
 args=LSTM_initial(args);
+
 delta=1e-10;
 
 % post=10;
