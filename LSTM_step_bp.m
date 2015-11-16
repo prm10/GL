@@ -1,4 +1,4 @@
-function [delta_down,args]=LSTM_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
+function [delta_down,args]=LSTM_step_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
     %% weight initial
     % input gates
     w_i=args.Weight{lay_i}.w_i;
@@ -53,25 +53,27 @@ function [delta_down,args]=LSTM_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
     dp_i=sum(c(1:end-1,:).*delta_i(2:end,:));
     dp_f=sum(c(1:end-1,:).*delta_f(2:end,:));
     dp_o=sum(c.*delta_o);
-
+    
+    max_gradient=max([max(max(abs(delta_o))),max(max(abs(delta_f))),max(max(abs(delta_i))),max(max(abs(delta_z))),...
+        max(max(abs(delta_y))),max(max(abs(delta_c)))])
     %% weight update
     % learning rate
     learningrate=args.learningrate;
     % input gates
-    args.Weight{lay_i}.w_i=w_i+learningrate*dw_i;
-    args.Weight{lay_i}.r_i=r_i+learningrate*dr_i;
-    args.Weight{lay_i}.p_i=p_i+learningrate*dp_i;
+    args.Weight{lay_i}.w_i=w_i-learningrate*dw_i;
+    args.Weight{lay_i}.r_i=r_i-learningrate*dr_i;
+    args.Weight{lay_i}.p_i=p_i-learningrate*dp_i;
     % forget gates
-    args.Weight{lay_i}.w_f=w_f+learningrate*dw_f;
-    args.Weight{lay_i}.r_f=r_f+learningrate*dr_f;
-    args.Weight{lay_i}.p_f=p_f+learningrate*dp_f;
+    args.Weight{lay_i}.w_f=w_f-learningrate*dw_f;
+    args.Weight{lay_i}.r_f=r_f-learningrate*dr_f;
+    args.Weight{lay_i}.p_f=p_f-learningrate*dp_f;
     % cells
-    args.Weight{lay_i}.w_z=w_z+learningrate*dw_z;
-    args.Weight{lay_i}.r_z=r_z+learningrate*dr_z;
+    args.Weight{lay_i}.w_z=w_z-learningrate*dw_z;
+    args.Weight{lay_i}.r_z=r_z-learningrate*dr_z;
     % output gates
-    args.Weight{lay_i}.w_o=w_o+learningrate*dw_o;
-    args.Weight{lay_i}.r_o=r_o+learningrate*dr_o;
-    args.Weight{lay_i}.p_o=p_o+learningrate*dp_o;
+    args.Weight{lay_i}.w_o=w_o-learningrate*dw_o;
+    args.Weight{lay_i}.r_o=r_o-learningrate*dr_o;
+    args.Weight{lay_i}.p_o=p_o-learningrate*dp_o;
 function y=dsigmoid(z)
     y=z.*(1-z);
 function y=dtanh(z)

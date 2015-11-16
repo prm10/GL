@@ -1,19 +1,23 @@
 clc;close all;clear all;
 rand('seed',2);
-args.input=rand(15,3);
-args.label=[mean(args.input,2)<=0.5 mean(args.input,2)>0.5];
-args.numblocks=5;
+input{1}=rand(15,3);
+label{1}=[mean(input{1},2)<=0.5 mean(input{1},2)>0.5];
+args.layer=[size(input{1},2) 3 size(label{1},2)];
+args.maxecho=10;
+args.learningrate=0;
 args=LSTM_initial(args);
 
-delta=1e-10;
+delta=1e-5;
 
-% post=10;
-% pos=2;
-% [~,d1]=LSTM_ff(args,0,post,pos);
-% [err1,~]=LSTM_ff(args,delta,post,pos);
-% [err2,~]=LSTM_ff(args,-delta,post,pos);
-% d2=(err1-err2)/2/delta
-% d1(post,pos)
+post=10;
+pos=2;
+
+args=LSTM_train(args,input,label);
+[~,d1]=LSTM_ff(args,0,post,pos);
+[err1,~]=LSTM_ff(args,delta,post,pos);
+[err2,~]=LSTM_ff(args,-delta,post,pos);
+d2=(err1-err2)/2/delta
+d1(post,pos)
 
 % for post=1:15
 %     for pos=1:3
