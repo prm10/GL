@@ -60,7 +60,7 @@ function [delta_down,args]=LSTM_step_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
     dp_f=sum(c(1:end-1,:).*delta_f(2:end,:));
     dp_o=sum(c.*delta_o);
     
-    if(exist('args.D','var'))
+    if(exist('args.D.w_o','var'))
         args.D.w_o=args.momentum*args.D.w_o+dw_o;
         args.D.w_f=args.momentum*args.D.w_f+dw_f;
         args.D.w_i=args.momentum*args.D.w_i+dw_i;

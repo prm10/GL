@@ -27,7 +27,12 @@ function [args]=LSTM_ff_bp(args,input,label)
 %     end
     % softmax layer
     delta_k=-(label-data_out);
-    dw_k=y{end}'*delta_k/size(y{end},1);
+    dw_k=y{end}'*delta_k;
+    if(exist('args.D.w_k','var'))
+        args.D.w_k=args.momentum*args.D.w_k+dw_k;
+    else
+        args.D.w_k=dw_k;
+    end
     % LSTM layer
     delta_up=delta_k*w_k';
     for i1=length(args.layer)-2:-1:1
@@ -35,4 +40,4 @@ function [args]=LSTM_ff_bp(args,input,label)
     end
     % learning rate
     learningrate=args.learningrate;
-    args.Weight{end}.w_k=w_k-learningrate*dw_k;
+    args.Weight{end}.w_k=w_k-learningrate*args.D.w_k;
