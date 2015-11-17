@@ -1,21 +1,33 @@
 function [args]=LSTM_ff_bp(args,input,label)
-    % data
+    %%前向传播
     x0=input;
     for i1=1:length(args.layer)-2
         [x{i1},in2{i1},f2{i1},z2{i1},c{i1},o2{i1},y{i1}]=LSTM_step_ff(x0,args,i1);
         x0=y{i1};
     end
-    % softmax layer
+    %最后一层
     w_k=args.Weight{end}.w_k;
-    temp=y{end}*w_k;
-    temp=exp(temp-max(temp,[],2)*ones(1,size(temp,2)));
-    data_out =temp./(sum(temp,2)*ones(1,size(temp,2)));
-    err=-sum(sum(label.* log(data_out)));
+    z_k=y{end}*w_k;
+    switch args.outputtype
+        case 'softmax'
+            % softmax layer
+            temp=exp(z_k-max(z_k,[],2)*ones(1,size(z_k,2)));
+            data_out =temp./(sum(temp,2)*ones(1,size(temp,2)));
+%             err=-sum(sum(label.* log(data_out)));
+        case 'linear'
+            data_out=z_k;
+    end
+    
     %% 反向传播
+%     switch args.outputtype
+%         case 'softmax'
+%             
+%         case 'linear'
+%             
+%     end
     % softmax layer
     delta_k=-(label-data_out);
-    dw_k=y{end}'*delta_k;
-
+    dw_k=y{end}'*delta_k/size(y{end},1);
     % LSTM layer
     delta_up=delta_k*w_k';
     for i1=length(args.layer)-2:-1:1
