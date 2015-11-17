@@ -45,6 +45,7 @@ function [delta_down,args]=LSTM_step_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
     delta_z=restrict(delta_z);
     
     delta_down=delta_x(:,1:end-1);
+
     dw_o=x'*delta_o;
     dw_f=x'*delta_f;
     dw_i=x'*delta_i;
@@ -59,30 +60,55 @@ function [delta_down,args]=LSTM_step_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
     dp_f=sum(c(1:end-1,:).*delta_f(2:end,:));
     dp_o=sum(c.*delta_o);
     
+    if(exist('args.D','var'))
+        args.D.w_o=args.momentum*args.D.w_o+dw_o;
+        args.D.w_f=args.momentum*args.D.w_f+dw_f;
+        args.D.w_i=args.momentum*args.D.w_i+dw_i;
+        args.D.w_z=args.momentum*args.D.w_z+dw_z;
+        args.D.r_o=args.momentum*args.D.r_o+dr_o;
+        args.D.r_f=args.momentum*args.D.r_f+dr_f;
+        args.D.r_i=args.momentum*args.D.r_i+dr_i;
+        args.D.r_z=args.momentum*args.D.r_z+dr_z;
+        args.D.p_o=args.momentum*args.D.p_o+dp_o;
+        args.D.p_f=args.momentum*args.D.p_f+dp_f;
+        args.D.p_i=args.momentum*args.D.p_i+dp_i;
+    else
+        args.D.w_o=dw_o;
+        args.D.w_f=dw_f;
+        args.D.w_i=dw_i;
+        args.D.w_z=dw_z;
+        args.D.r_o=dr_o;
+        args.D.r_f=dr_f;
+        args.D.r_i=dr_i;
+        args.D.r_z=dr_z;
+        args.D.p_o=dp_o;
+        args.D.p_f=dp_f;
+        args.D.p_i=dp_i;
+    end
 %     max_gradient=max([max(max(abs(delta_o))),max(max(abs(delta_f))),max(max(abs(delta_i))),max(max(abs(delta_z))),...
 %         max(max(abs(delta_y))),max(max(abs(delta_c)))])
     %% weight update
     % learning rate
     learningrate=args.learningrate;
-    % input gates
-    args.Weight{lay_i}.w_i=w_i-learningrate*dw_i;
-    args.Weight{lay_i}.r_i=r_i-learningrate*dr_i;
-    args.Weight{lay_i}.p_i=p_i-learningrate*dp_i;
+        % input gates
+    args.Weight{lay_i}.w_i=w_i-learningrate*args.D.w_i;
+    args.Weight{lay_i}.r_i=r_i-learningrate*args.D.r_i;
+    args.Weight{lay_i}.p_i=p_i-learningrate*args.D.p_i;
     % forget gates
-    args.Weight{lay_i}.w_f=w_f-learningrate*dw_f;
-    args.Weight{lay_i}.r_f=r_f-learningrate*dr_f;
-    args.Weight{lay_i}.p_f=p_f-learningrate*dp_f;
+    args.Weight{lay_i}.w_f=w_f-learningrate*args.D.w_f;
+    args.Weight{lay_i}.r_f=r_f-learningrate*args.D.r_f;
+    args.Weight{lay_i}.p_f=p_f-learningrate*args.D.p_f;
     % cells
-    args.Weight{lay_i}.w_z=w_z-learningrate*dw_z;
-    args.Weight{lay_i}.r_z=r_z-learningrate*dr_z;
+    args.Weight{lay_i}.w_z=w_z-learningrate*args.D.w_z;
+    args.Weight{lay_i}.r_z=r_z-learningrate*args.D.r_z;
     % output gates
-    args.Weight{lay_i}.w_o=w_o-learningrate*dw_o;
-    args.Weight{lay_i}.r_o=r_o-learningrate*dr_o;
-    args.Weight{lay_i}.p_o=p_o-learningrate*dp_o;
+    args.Weight{lay_i}.w_o=w_o-learningrate*args.D.w_o;
+    args.Weight{lay_i}.r_o=r_o-learningrate*args.D.r_o;
+    args.Weight{lay_i}.p_o=p_o-learningrate*args.D.p_o;
 function y=dsigmoid(z)
     y=z.*(1-z);
 function y=dtanh(z)
     y=1-z.^2;
 function delta_out=restrict(delta)
-    delta_out=delta;
-%     delta_out=max(-ones(size(delta)),min(ones(size(delta)),delta));
+%     delta_out=delta;
+    delta_out=max(-ones(size(delta)),min(ones(size(delta)),delta));
