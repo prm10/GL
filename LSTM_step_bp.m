@@ -39,6 +39,11 @@ function [delta_down,args]=LSTM_step_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
         delta_z(t,:)=delta_c(t,:).*in2(t,:).*dtanh(z2(t,:));
         delta_x(t,:)=delta_z(t,:)*w_z'+delta_i(t,:)*w_i'+delta_f(t,:)*w_f'+delta_o(t,:)*w_o';
     end
+    delta_o=restrict(delta_o);
+    delta_f=restrict(delta_f);
+    delta_i=restrict(delta_i);
+    delta_z=restrict(delta_z);
+    
     delta_down=delta_x(:,1:end-1);
     dw_o=x'*delta_o;
     dw_f=x'*delta_f;
@@ -54,8 +59,8 @@ function [delta_down,args]=LSTM_step_bp(delta_up,args,lay_i,x,in2,f2,z2,c,o2,y)
     dp_f=sum(c(1:end-1,:).*delta_f(2:end,:));
     dp_o=sum(c.*delta_o);
     
-    max_gradient=max([max(max(abs(delta_o))),max(max(abs(delta_f))),max(max(abs(delta_i))),max(max(abs(delta_z))),...
-        max(max(abs(delta_y))),max(max(abs(delta_c)))])
+%     max_gradient=max([max(max(abs(delta_o))),max(max(abs(delta_f))),max(max(abs(delta_i))),max(max(abs(delta_z))),...
+%         max(max(abs(delta_y))),max(max(abs(delta_c)))])
     %% weight update
     % learning rate
     learningrate=args.learningrate;
@@ -78,3 +83,6 @@ function y=dsigmoid(z)
     y=z.*(1-z);
 function y=dtanh(z)
     y=1-z.^2;
+function delta_out=restrict(delta)
+    delta_out=delta;
+%     delta_out=max(-ones(size(delta)),min(ones(size(delta)),delta));
