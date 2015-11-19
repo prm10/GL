@@ -1,5 +1,5 @@
 clc;close all;clear all;
-rand('seed',3);
+rng(3);
 %% 输入：三维随机数；
 % 输出：1：第1维输入的前3项x(t-1)的和；2：第2维减去第1维；
 delay=3;
@@ -29,4 +29,6 @@ args.outputtype='softmax';
 args=LSTM_initial(args);
 [args]=LSTM_train(args,train_input,train_label);
 [dout,error]=LSTM_ff(test_input,test_label,args);
-sum((dout(:,1)>.5)==())/size(dout,1)
+
+
+
