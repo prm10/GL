@@ -14,19 +14,22 @@ function [args]=LSTM_ff_bp(args,input,label)
             temp=exp(z_k-max(z_k,[],2)*ones(1,size(z_k,2)));
             data_out =temp./(sum(temp,2)*ones(1,size(temp,2)));
 %             err=-sum(sum(label.* log(data_out)));
+        case 'tanh'
+            data_out=tanh(z_k);
         case 'linear'
             data_out=z_k;
     end
     
     %% ·´Ïò´«²¥
-%     switch args.outputtype
-%         case 'softmax'
-%             
-%         case 'linear'
-%             
-%     end
-    % softmax layer
-    delta_k=-(label-data_out);
+    switch args.outputtype
+        case 'softmax'
+            delta_k=-(label-data_out);
+        case 'linear'
+            delta_k=-(label-data_out);
+        case 'tanh'
+            delta_k=-(label-data_out).*(1-data_out.^2);
+    end
+
     dw_k=y{end}'*delta_k;
     if(exist('args.D.w_k','var'))
         args.D.w_k=args.momentum*args.D.w_k+dw_k;

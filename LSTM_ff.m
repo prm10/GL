@@ -1,4 +1,4 @@
-function [data_out,error]=LSTM_ff(input,label,args)
+function [dout,error]=LSTM_ff(input,label,args)
 error=0;
 for i2=1:length(input)
     y=input{i2};
@@ -16,6 +16,10 @@ for i2=1:length(input)
         case 'linear'
             data_out=z_k;
             error=error+sum(sum((label{i2}-data_out).^2))/size(data_out,1)/size(data_out,2);
+        case 'tanh'
+            data_out=tanh(z_k);
+            error=error+sum(sum((label{i2}-data_out).^2))/size(data_out,1)/size(data_out,2);
     end
+    dout{i2}=data_out;
 end
 error=error/length(input)*100;
