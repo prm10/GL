@@ -1,10 +1,12 @@
 clc;close all;clear all;
 rng(3);
-load('K:\GL_data\5\data_labeled.mat');
-train_input=input0([1:4]);
-train_label=label0([1:4]);
-test_input=input0([5,6]);
-test_label=label0([5,6]);
+load('K:\GL_data\3\data_labeled.mat');
+train_index=[1:5,10:15];
+test_index=[6:9,15:19];
+train_input=input0(train_index);
+train_label=label0(train_index);
+test_input=input0(test_index);
+test_label=label0(test_index);
 % load('K:\GL_data\5\data_labeled.mat');
 % test_input=input0;
 % test_label=label0;
