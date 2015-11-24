@@ -1,22 +1,38 @@
-clc;close all;clear all;
+clc;close all;clear;
 rng(3);
+GL2={'富氧率','透气性指数','CO','H2','CO2','标准风速','富氧流量','冷风流量','鼓风动能','炉腹煤气量','炉腹煤气指数','理论燃烧温度','顶压','顶压2','顶压3','顶压4','富氧压力','冷风压力','冷风压力2','全压差','热风压力','热风压力2','实际风速','冷风温度','热风温度','顶温东北','顶温西南','顶温西北','顶温东南','顶温下降管','阻力系数','鼓风湿度','设定喷煤量','本小时实际喷煤量','上小时实际喷煤量'};
+GL3={'富氧率','透气性指数','CO','H2','CO2','标准风速','富氧流量','冷风流量','鼓风动能','炉腹煤气量','炉腹煤气指数','理论燃烧温度','顶压','顶压2','顶压3','富氧压力','冷风压力','全压差','热风压力','实际风速','热风温度','顶温东北','顶温西南','顶温西北','顶温东南','阻力系数','鼓风湿度','设定喷煤量','本小时实际喷煤量','上小时实际喷煤量'};
+GL5={'富氧率','透气性指数','CO','H2','CO2','标准风速','富氧流量','冷风流量','鼓风动能','炉腹煤气量','炉腹煤气指数','理论燃烧温度','顶压','顶压西北上','富氧压力','冷风压力','全压差','热风压力','实际风速','热风温度','顶温东北','顶温西南','顶温西北','顶温东南','阻力系数','鼓风湿度','设定喷煤量','上小时实际喷煤量'};
+
+
 % load('K:\GL_data\3\data.mat');
 load('K:\GL_data\3\data_normalized.mat');
-
 % range=400000:length(date0);
-% plot(date0(range),data0(range,6));
+% plot(date0(range),data1(range,22)/3);
+
 % datestr(date0(1920468),'yyyy-mm-dd HH:MM:SS')
 %% 3号高炉，2012-07-06至年底为训练集；2013年为测试集
 global train_data train_label test_data test_label;
-train_data=data1(400000:1920468,:);
-test_data=data1(1920468:end,:);
-clear data1;
-args.layer=[size(train_input{1},2) 20 5 size(train_label{1},2)];
+train_index=400000:1920468;
+test_index=1920468:size(data1,1)-1;
+label_index=22;
+train_data=data1(train_index,:);
+test_data=data1(test_index,:);
+train_label=data1(train_index+1,label_index)/3;
+% train_label=max(train_label,-1.5*ones(size(train_label)));
+% train_label=min(train_label,1.5*ones(size(train_label)));
+test_label=data1(test_index+1,label_index)/3;
+% test_label=max(test_label,-1.5*ones(size(test_label)));
+% test_label=min(test_label,1.5*ones(size(test_label)));
+clear date0 data1 train_index test_index;
+% 参数设置
 args.maxecho=100;
-args.momentum=0.9;
+args.momentum=0.99;
 args.labellength=8000;
 args.circletimes=100;
 args.learningrate=1e-3;
-args.outputtype='softmax';
+args.outputtype='tanh';
+args.layer=[size(train_data,2) 30 size(train_label,2)];
+
 args=LSTM_initial(args);
-[args]=LSTM_train(args,train_input,train_label);
+[args]=LSTM_train(args);
