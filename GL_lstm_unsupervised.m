@@ -25,14 +25,29 @@ test_label=data1(test_index+1,label_index)/3;
 % test_label=max(test_label,-1.5*ones(size(test_label)));
 % test_label=min(test_label,1.5*ones(size(test_label)));
 clear date0 data1 train_index test_index;
-% 参数设置
-args.maxecho=100;
-args.momentum=0.99;
-args.labellength=8000;
-args.circletimes=100;
-args.learningrate=1e-3;
-args.outputtype='tanh';
-args.layer=[size(train_data,2) 30 size(train_label,2)];
+args_name='args.mat';
+if(~exist('args_name','var'))
+    % 参数设置
+    args.maxecho=100;
+    args.momentum=0.99;
+    args.labellength=2000;
+    args.circletimes=100;
+    args.learningrate=1e-1;
+    args.outputtype='tanh';
+    args.layer=[size(train_data,2) 50 size(train_label,2)];
+    args=LSTM_initial(args);
+else
+    load(args_name);
+    % 改变些参数
+    args.learningrate=1e-2;
+    args.labellength=4000;
+end
 
-args=LSTM_initial(args);
 [args]=LSTM_train(args);
+save('args20151125.mat','args');
+pos=400000:410000;
+[dout,error]=LSTM_ff({train_data(pos,:)},{train_label(pos,:)},args);
+figure;plot(pos,train_label(pos,:),pos,dout{1},'.');
+legend('actual','predict');
+figure;imshow(100*abs(args.Weight{1, 1}.w_i));
+figure;imshow(100*abs(args.Weight{1, 2}.w_k));

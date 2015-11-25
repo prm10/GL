@@ -30,7 +30,7 @@ function [args]=LSTM_ff_bp(args,input,label)
             delta_k=-(label-data_out).*(1-data_out.^2);
     end
 
-    dw_k=y{end}'*delta_k;
+    dw_k=y{end}'*delta_k/size(delta_k,1);
     if(exist('args.D.w_k','var'))
         args.D.w_k=args.momentum*args.D.w_k+dw_k;
     else
