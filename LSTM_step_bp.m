@@ -111,4 +111,4 @@ function y=dtanh(z)
     y=1-z.^2;
 function delta_out=restrict(delta)
 %     delta_out=delta;
-    delta_out=max(-5*ones(size(delta)),min(5*ones(size(delta)),delta));
+    delta_out=max(-1*ones(size(delta)),min(1*ones(size(delta)),delta));
