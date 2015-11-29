@@ -12,28 +12,36 @@ function [args]=LSTM_ff_bp(args,input,label)
     z_k1=y1{end}(end,:)*w_k1+b_k1;%只记录最后一层的最后一个
     C=tanh(z_k1);
     % decoder
-    inputDecoder=[ones(size(input,1),1)*C,[zeros(1,size(input,2));input(end:-1:2,:)]];
-    for i1=1:length(args.decoderLayer)-2
-        [x2{i1},in2{i1},f2{i1},z2{i1},c2{i1},o2{i1},y2{i1}]=LSTM_step_ff(inputDecoder,args.WeightDecoder{i1});
-        inputDecoder=y2{i1};
-    end
-     %最后一层
+    inputDecoder(1,:)=[C,zeros(1,size(input,2))];
     w_k2=args.WeightDecoder{end}.w_k;
     b_k2=args.WeightDecoder{end}.b_k;
-    z_k2=y2{end}*w_k2+ones(size(y2{end},1),1)*b_k2;
-    reconstruct=tanh(z_k2);
+    for i3=1:size(input,1)
+        inputR=inputDecoder(i3,:);
+        for i1=1:length(args.decoderLayer)-2
+            [x2{i1}(i3,:),in2{i1}(i3,:),f2{i1}(i3,:),z2{i1}(i3,:),c2{i1}(i3,:),o2{i1}(i3,:),y2{i1}(i3,:)]=LSTM_step_ff(inputR,args.WeightDecoder{i1});
+            inputR=y2{i1}(i3,:);
+        end
+        %最后一层
+        z_k2=inputR*w_k2+ones(size(inputR,1),1)*b_k2;
+        inputDecoder(i3+1,:)=[C,tanh(z_k2)];
+    end
+    reconstruct=inputDecoder(2:end,size(C,2)+1:end);
     
     % predict
-    inputPredict=[ones(size(label,1),1)*C,[zeros(1,size(label,2));label(1:end-1,:)]];
-    for i1=1:length(args.predictLayer)-2
-        [x3{i1},in3{i1},f3{i1},z3{i1},c3{i1},o3{i1},y3{i1}]=LSTM_step_ff(inputPredict,args.WeightPredict{i1});
-        inputPredict=y3{i1};
-    end
-     %最后一层
+    inputPredict(1,:)=[C,zeros(1,size(label,2))];
     w_k3=args.WeightPredict{end}.w_k;
     b_k3=args.WeightPredict{end}.b_k;
-    z_k3=y3{end}*w_k3+ones(size(y3{end},1),1)*b_k3;
-    predict=tanh(z_k3);
+    for i3=1:size(label,1)
+        inputP=inputPredict(i3,:);
+        for i1=1:length(args.predictLayer)-2
+            [x3{i1}(i3,:),in3{i1}(i3,:),f3{i1}(i3,:),z3{i1}(i3,:),c3{i1}(i3,:),o3{i1}(i3,:),y3{i1}(i3,:)]=LSTM_step_ff(inputP,args.WeightPredict{i1});
+            inputP=y3{i1}(i3,:);
+        end
+        %最后一层
+        z_k3=inputP*w_k3+ones(size(inputP,1),1)*b_k3;
+        inputPredict(i3+1,:)=[C,tanh(z_k3)];
+    end
+    predict=inputPredict(2:end,size(C,2)+1:end);
     %% 反向传播
     % predict layer
     delta_k3=-(label-predict).*(1-predict.^2);
