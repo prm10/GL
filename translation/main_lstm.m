@@ -20,19 +20,24 @@ for i1=1:num
 end
 test_data=train_data(1);
 test_label=train_label(1);
- % 参数设置
-args.maxecho=10;
-args.circletimes=100;
-args.momentum=0.9;
-args.learningrate=1e-2;
-% args.predictLength=1000;
-dimC=10;
-dimInput=1;
-dimOutput=1;
-args.encoderLayer=[1,20,dimC];
-args.decoderLayer=[dimC+dimOutput,20,dimInput];
-args.predictLayer=[dimC+dimOutput,20,dimOutput];
-args=LSTM_initial(args);
+% 参数设置
+% load('args.mat');
+if(exist('args','var'))
+    
+else
+    args.maxecho=10;
+    args.circletimes=100;
+    args.momentum=0.9;
+    args.learningrate=1e-5;
+    % args.predictLength=1000;
+    dimC=10;
+    dimInput=1;
+    dimOutput=1;
+    args.encoderLayer=[1,100,dimC];
+    args.decoderLayer=[dimC+dimOutput,100,dimInput];
+    args.predictLayer=[dimC+dimOutput,100,dimOutput];
+    args=LSTM_initial(args);
+end
 [args]=LSTM_train(args);
 save('args.mat','args');
 [reconstruct,predict,errorR,errorP]=LSTM_ff(test_data,test_label,args);
