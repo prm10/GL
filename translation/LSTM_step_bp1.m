@@ -41,10 +41,13 @@ function [delta_down,delta_c0,W,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,
         end
     end
     
+%     delta_y=restrict(delta_y);
 %     delta_o=restrict(delta_o);
+%     delta_c0=restrict(delta_c0);
 %     delta_f=restrict(delta_f);
 %     delta_i=restrict(delta_i);
 %     delta_z=restrict(delta_z);
+    
     dw_k=y{end}'*delta_k;
     MW{end}.w_k=momentum*MW{end}.w_k+dw_k;
     W{end}.w_k=W{end}.w_k-learningrate*MW{end}.w_k;
@@ -101,4 +104,6 @@ function y=dsigmoid(z)
 function y=dtanh(z)
     y=1-z.^2;
 function delta_out=restrict(delta)
-    delta_out=max(-1*ones(size(delta)),min(1*ones(size(delta)),delta));
+    for i1=1:length(delta)
+        delta_out{i1}=max(-1*ones(size(delta{i1})),min(1*ones(size(delta{i1})),delta{i1}));
+    end

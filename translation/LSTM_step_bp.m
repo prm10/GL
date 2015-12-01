@@ -41,10 +41,11 @@ learningrate=args.learningrate;
         delta_z(t,:)=delta_c(t,:).*in2(t,:).*dtanh(z2(t,:));
         delta_x(t,:)=delta_z(t,:)*w_z'+delta_i(t,:)*w_i'+delta_f(t,:)*w_f'+delta_o(t,:)*w_o';
     end
-    delta_o=restrict(delta_o);
-    delta_f=restrict(delta_f);
-    delta_i=restrict(delta_i);
-    delta_z=restrict(delta_z);
+    
+%     delta_o=restrict(delta_o);
+%     delta_f=restrict(delta_f);
+%     delta_i=restrict(delta_i);
+%     delta_z=restrict(delta_z);
     
     delta_down=delta_x(:,1:end-1);
 
