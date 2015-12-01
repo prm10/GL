@@ -9,7 +9,7 @@ global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
 lenInput=10;
-lenOutput=5;
+lenOutput=3;
 num=1;
 index=floor(rand(num,1)*(size(x1,1)-lenInput-lenOutput));
 for i1=1:num
@@ -26,13 +26,19 @@ if(exist('args','var'))%梯度检查
     args.circletimes=1;
     args.momentum=0;
     args.learningrate=0;
-    [args]=LSTM_train(args);
-    [~,~,errorR0,errorP0]=LSTM_ff(train_data,train_label,args);
-    dcal=args.Mom.WeightPredict{1, 2}.w_k;
-    error_delta=1e-6;
-    args.WeightPredict{1, 2}.w_k=args.WeightPredict{1, 2}.w_k+error_delta;
+    [args]=LSTM_train(args);%计算下当前的梯度
+    vname='WeightPredict{1, 1}.w_z';
+    s1=strcat('dcal=args.','Mom.',vname,'(1,1);');
+    eval(s1);
+%     dcal=args.Mom.WeightPredict{1, 1}.w_i(1,1);
+    error_delta=1e-4;
+    s2=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)+error_delta;');
+    eval(s2);
+%     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
     [~,~,errorR1,errorP1]=LSTM_ff(train_data,train_label,args);
-    args.WeightPredict{1, 2}.w_k=args.WeightPredict{1, 2}.w_k-2*error_delta;
+    s3=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)-2*error_delta;');
+    eval(s3);
+%     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)-2*error_delta;
     [~,~,errorR2,errorP2]=LSTM_ff(train_data,train_label,args);
     dreal=(errorP1-errorP2)/error_delta/2;
 else %初始化
