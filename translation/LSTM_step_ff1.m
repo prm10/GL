@@ -44,8 +44,8 @@ function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff1(input_x11,input_c0,input_x
         output=inputX0(2:end,size(input_xC,2)+1:end);
     end
     
-function [xin,in2,f2,z2,c,o2,yout]=LSTM_step_ff2(x0,y0,c0,Weight)
-    xin=[x0 1];
+function [xin,in2,f2,z2,c,o2,yout]=LSTM_step_ff2(x1,y0,c0,Weight)
+    xin=[x1,1];
     % input gates
     in1=xin*Weight.w_i+y0*Weight.r_i+c0.*Weight.p_i;
     in2=sigmoid(in1);

@@ -28,11 +28,11 @@ if(exist('args','var'))%梯度检查
     args.momentum=0;
     args.learningrate=0;
     [args]=LSTM_train(args);%计算下当前的梯度
-    vname='WeightTranP{1, 1}.w_k';
+    vname='WeightTranP{1, 1}.b_k';
     s1=strcat('dcal=args.Mom.',vname,'(1,1);');
     eval(s1);
 %     dcal=args.Mom.WeightPredict{1, 1}.w_i(1,1);
-    error_delta=1e-5;%1e-10/dcal;%
+    error_delta=1e-10/dcal;%1e-5;%
     s2=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)+error_delta;');
     eval(s2);
 %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
