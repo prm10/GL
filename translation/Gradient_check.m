@@ -9,7 +9,7 @@ global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
 lenInput=10;
-lenOutput=1;
+lenOutput=5;
 num=1;
 index=floor(rand(num,1)*(size(x1,1)-lenInput-lenOutput));
 for i1=1:num
@@ -29,12 +29,12 @@ if(exist('args','var'))%梯度检查
     [args]=LSTM_train(args);
     [~,~,errorR0,errorP0]=LSTM_ff(train_data,train_label,args);
     dcal=args.Mom.WeightPredict{1, 2}.w_k;
-    delta=1e-6;
-    args.WeightPredict{1, 2}.w_k=args.WeightPredict{1, 2}.w_k+delta;
+    error_delta=1e-6;
+    args.WeightPredict{1, 2}.w_k=args.WeightPredict{1, 2}.w_k+error_delta;
     [~,~,errorR1,errorP1]=LSTM_ff(train_data,train_label,args);
-    args.WeightPredict{1, 2}.w_k=args.WeightPredict{1, 2}.w_k-2*delta;
+    args.WeightPredict{1, 2}.w_k=args.WeightPredict{1, 2}.w_k-2*error_delta;
     [~,~,errorR2,errorP2]=LSTM_ff(train_data,train_label,args);
-    dreal=(errorP1-errorP2)/delta/2;
+    dreal=(errorP1-errorP2)/error_delta/2;
 else %初始化
     args.maxecho=1;
     args.circletimes=100;
