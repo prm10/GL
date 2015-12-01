@@ -6,10 +6,10 @@ function [args]=LSTM_ff_bp(args,input,label)
     C1=C(end,:);
     %³õÊ¼×´Ì¬²ã
     for i1=1:length(args.decoderLayer)-2
-        C2{i1}=C1*args.TranR{i1}.w_k+args.TranR{i1}.b_k;
+        C2{i1}=C1*args.WeightTranR{i1}.w_k+args.WeightTranR{i1}.b_k;
     end
     for i1=1:length(args.predictLayer)-2
-        C3{i1}=C1*args.TranP{i1}.w_k+args.TranP{i1}.b_k;
+        C3{i1}=C1*args.WeightTranP{i1}.w_k+args.WeightTranP{i1}.b_k;
     end
     % decoder
     input_x11=[C1,zeros(1,size(input,2))];%t=1
@@ -22,28 +22,28 @@ function [args]=LSTM_ff_bp(args,input,label)
     %% uncondictioned
     % predict and reconstruction layer
     [delta_up3,delta_c03,args.WeightPredict,args.Mom.WeightPredict]=...
-        LSTM_step_bp1(args,label,predict,args.WeightPredict,args.Mom.WeightPredict,x3,in3,f3,z3,c3,o3,y3);
+        LSTM_step_bp1(args,label,predict,args.WeightPredict,args.Mom.WeightPredict,x3,in3,f3,z3,c3,o3,y3,C3);
     [delta_up2,delta_c02,args.WeightDecoder,args.Mom.WeightDecoder]=...
-        LSTM_step_bp1(args,input(end:-1:1,:),reconstruct,args.WeightDecoder,args.Mom.WeightDecoder,x2,in2,f2,z2,c2,o2,y2);
+        LSTM_step_bp1(args,input(end:-1:1,:),reconstruct,args.WeightDecoder,args.Mom.WeightDecoder,x2,in2,f2,z2,c2,o2,y2,C2);
     %encoder layer
     temp1=zeros(1,size(C1,2));
     for i1=1:length(delta_c03)
-        temp1=temp1+delta_c03{i1}*args.TranP{i1}.w_k';
+        temp1=temp1+delta_c03{i1}*args.WeightTranP{i1}.w_k';
         dw_k=C1'*delta_c03{i1};
         args.Mom.WeightTranP{i1}.w_k=args.momentum*args.Mom.WeightTranP{i1}.w_k+dw_k;
-        args.TranP{i1}.w_k=args.TranP{i1}.w_k-args.learningrate*args.Mom.WeightTranP{i1}.w_k;
+        args.WeightTranP{i1}.w_k=args.WeightTranP{i1}.w_k-args.learningrate*args.Mom.WeightTranP{i1}.w_k;
         db_k=delta_c03{i1};
         args.Mom.WeightTranP{i1}.b_k=args.momentum*args.Mom.WeightTranP{i1}.b_k+db_k;
-        args.TranP{i1}.b_k=args.TranP{i1}.b_k-args.learningrate*args.Mom.WeightTranP{i1}.b_k;
+        args.WeightTranP{i1}.b_k=args.WeightTranP{i1}.b_k-args.learningrate*args.Mom.WeightTranP{i1}.b_k;
     end
     for i1=1:length(delta_c02)
-        temp1=temp1+delta_c02{i1}*args.TranR{i1}.w_k';
+        temp1=temp1+delta_c02{i1}*args.WeightTranR{i1}.w_k';
         dw_k=C1'*delta_c02{i1};
         args.Mom.WeightTranR{i1}.w_k=args.momentum*args.Mom.WeightTranR{i1}.w_k+dw_k;
-        args.TranR{i1}.w_k=args.TranR{i1}.w_k-args.learningrate*args.Mom.WeightTranR{i1}.w_k;
+        args.WeightTranR{i1}.w_k=args.WeightTranR{i1}.w_k-args.learningrate*args.Mom.WeightTranR{i1}.w_k;
         db_k=delta_c02{i1};
         args.Mom.WeightTranR{i1}.b_k=args.momentum*args.Mom.WeightTranR{i1}.b_k+db_k;
-        args.TranR{i1}.b_k=args.TranR{i1}.b_k-args.learningrate*args.Mom.WeightTranR{i1}.b_k;
+        args.WeightTranR{i1}.b_k=args.WeightTranR{i1}.b_k-args.learningrate*args.Mom.WeightTranR{i1}.b_k;
     end
     delta_k1=delta_up3+delta_up2+temp1;
     dw_k1=y1{end}(end,:)'*delta_k1;

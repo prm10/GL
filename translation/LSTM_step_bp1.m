@@ -1,4 +1,4 @@
-function [delta_down,delta_c0,W,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,f2,z2,c,o2,y)
+function [delta_down,delta_c0,W,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,f2,z2,c,o2,y,c0)
     momentum=args.momentum;
     learningrate=args.learningrate;
     T=size(yout,1);
@@ -29,7 +29,7 @@ function [delta_down,delta_c0,W,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,
                     +W{lay_i}.p_f.*delta_f{lay_i}(t+1,:)+delta_c{lay_i}(t+1,:).*f2{lay_i}(t+1,:);
             end
             if t==1
-                delta_f{lay_i}(t,:)=0;
+                delta_f{lay_i}(t,:)=delta_c{lay_i}(t,:).*c0{lay_i}.*dsigmoid(f2{lay_i}(t,:));
                 delta_c0{lay_i}=W{lay_i}.p_i.*delta_i{lay_i}(1,:)+W{lay_i}.p_f.*delta_f{lay_i}(1,:)+delta_c{lay_i}(1,:).*f2{lay_i}(1,:);
             else
                 delta_f{lay_i}(t,:)=delta_c{lay_i}(t,:).*c{lay_i}(t-1,:).*dsigmoid(f2{lay_i}(t,:));
@@ -63,8 +63,8 @@ function [delta_down,delta_c0,W,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,
         dr_i=y{lay_i}(1:end-1,:)'*delta_i{lay_i}(2:end,:);
         dr_z=y{lay_i}(1:end-1,:)'*delta_z{lay_i}(2:end,:);
 
-        dp_i=sum(c{lay_i}(1:end-1,:).*delta_i{lay_i}(2:end,:));
-        dp_f=sum(c{lay_i}(1:end-1,:).*delta_f{lay_i}(2:end,:));
+        dp_i=sum(c{lay_i}(1:end-1,:).*delta_i{lay_i}(2:end,:))+c0{lay_i}.*delta_i{lay_i}(1,:);
+        dp_f=sum(c{lay_i}(1:end-1,:).*delta_f{lay_i}(2:end,:))+c0{lay_i}.*delta_f{lay_i}(1,:);
         dp_o=sum(c{lay_i}.*delta_o{lay_i});
 
         MW{lay_i}.w_o=momentum*MW{lay_i}.w_o+dw_o;

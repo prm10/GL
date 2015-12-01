@@ -82,16 +82,16 @@ args.WeightPredict{length(args.predictLayer)-1}.b_k=zeros(1,N);
 for i1=1:length(args.decoderLayer)-2
     M=args.encoderLayer(end);
     N=args.decoderLayer(i1+1);
-    args.TranR{i1}.w_k=1/M*normrnd(0,0.1,[M,N]);
-    args.TranR{i1}.b_k=zeros(1,N);
+    args.WeightTranR{i1}.w_k=1/M*normrnd(0,0.1,[M,N]);
+    args.WeightTranR{i1}.b_k=zeros(1,N);
     args.Mom.WeightTranR{i1}.w_k=zeros(M,N);
     args.Mom.WeightTranR{i1}.b_k=zeros(1,N);
 end
 for i1=1:length(args.predictLayer)-2
     M=args.encoderLayer(end);
     N=args.predictLayer(i1+1);
-    args.TranP{i1}.w_k=1/M*normrnd(0,0.1,[M,N]);
-    args.TranP{i1}.b_k=zeros(1,N);
+    args.WeightTranP{i1}.w_k=1/M*normrnd(0,0.1,[M,N]);
+    args.WeightTranP{i1}.b_k=zeros(1,N);
     args.Mom.WeightTranP{i1}.w_k=zeros(M,N);
     args.Mom.WeightTranP{i1}.b_k=zeros(1,N);
 end

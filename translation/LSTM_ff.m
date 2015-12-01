@@ -11,10 +11,10 @@ for i2=1:length(input0)
     C1=C(end,:);
     %³õÊ¼×´Ì¬²ã
     for i1=1:length(args.decoderLayer)-2
-        C2{i1}=C1*args.TranR{i1}.w_k+args.TranR{i1}.b_k;
+        C2{i1}=C1*args.WeightTranR{i1}.w_k+args.WeightTranR{i1}.b_k;
     end
     for i1=1:length(args.predictLayer)-2
-        C3{i1}=C1*args.TranP{i1}.w_k+args.TranP{i1}.b_k;
+        C3{i1}=C1*args.WeightTranP{i1}.w_k+args.WeightTranP{i1}.b_k;
     end
     % decoder
     input_x11=[C1,zeros(1,size(input,2))];%t=1
