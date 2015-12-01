@@ -48,19 +48,19 @@ learningrate=args.learningrate;
     
     delta_down=delta_x(:,1:end-1);
 
-    dw_o=x'*delta_o/T;
-    dw_f=x'*delta_f/T;
-    dw_i=x'*delta_i/T;
-    dw_z=x'*delta_z/T;
+    dw_o=x'*delta_o;
+    dw_f=x'*delta_f;
+    dw_i=x'*delta_i;
+    dw_z=x'*delta_z;
 
-    dr_o=y(1:end-1,:)'*delta_o(2:end,:)/T;
-    dr_f=y(1:end-1,:)'*delta_f(2:end,:)/T;
-    dr_i=y(1:end-1,:)'*delta_i(2:end,:)/T;
-    dr_z=y(1:end-1,:)'*delta_z(2:end,:)/T;
+    dr_o=y(1:end-1,:)'*delta_o(2:end,:);
+    dr_f=y(1:end-1,:)'*delta_f(2:end,:);
+    dr_i=y(1:end-1,:)'*delta_i(2:end,:);
+    dr_z=y(1:end-1,:)'*delta_z(2:end,:);
 
-    dp_i=sum(c(1:end-1,:).*delta_i(2:end,:))/T;
-    dp_f=sum(c(1:end-1,:).*delta_f(2:end,:))/T;
-    dp_o=sum(c.*delta_o)/T;
+    dp_i=sum(c(1:end-1,:).*delta_i(2:end,:));
+    dp_f=sum(c(1:end-1,:).*delta_f(2:end,:));
+    dp_o=sum(c.*delta_o);
     
     MomWeight.w_o=momentum*MomWeight.w_o+dw_o;
     MomWeight.w_f=momentum*MomWeight.w_f+dw_f;

@@ -5,7 +5,7 @@ function [xin,in2,f2,z2,c,o2,yout]=LSTM_step_ff1(x0,y0,c0,Weight)
     in2=sigmoid(in1);
     % forget gates
     f1=xin*Weight.w_f+y0*Weight.r_f+c0.*Weight.p_f;
-    f2=sigmoid(f1(t,:));
+    f2=sigmoid(f1);
     % cells
     z1=xin*Weight.w_z+y0*Weight.r_z;
     z2=tanh(z1);

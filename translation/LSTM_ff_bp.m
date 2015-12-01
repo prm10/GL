@@ -10,10 +10,16 @@ function [args]=LSTM_ff_bp(args,input,label)
     w_k1=args.WeightEncoder{end}.w_k;
     b_k1=args.WeightEncoder{end}.b_k;
     z_k1=y1{end}(end,:)*w_k1+b_k1;%只记录最后一层的最后一个
-    C=tanh(z_k1);
+    C1=tanh(z_k1);
+    for i1=1:length(args.decoderLayer)-2
+        C2{i1}=C1*args.TranR{i1}.w_k+args.TranR{i1}.b_k;
+    end
+    for i1=1:length(args.predictLayer)-2
+        C3{i1}=C1*args.TranP{i1}.w_k+args.TranP{i1}.b_k;
+    end
 
     % decoder
-    inputDecoder(1,:)=[C,zeros(1,size(input,2))];%t=1
+    inputDecoder(1,:)=[C1,zeros(1,size(input,2))];%t=1
     w_k2=args.WeightDecoder{end}.w_k;
     b_k2=args.WeightDecoder{end}.b_k;
     for t=1:size(input,1)
@@ -21,7 +27,7 @@ function [args]=LSTM_ff_bp(args,input,label)
         for lay_i=1:length(args.decoderLayer)-2
             if t==1
                 inputY=zeros(1,args.decoderLayer(lay_i+1));
-                inputC=zeros(1,args.decoderLayer(lay_i+1));
+                inputC=C2{lay_i};%zeros(1,args.decoderLayer(lay_i+1));
             else
                 inputY=y2{lay_i}(t-1,:);
                 inputC=c2{lay_i}(t-1,:);
@@ -31,12 +37,12 @@ function [args]=LSTM_ff_bp(args,input,label)
         end
         %最后一层
         z_k2=inputR*w_k2+b_k2;
-        inputDecoder(t+1,:)=[C,tanh(z_k2)];
+        inputDecoder(t+1,:)=[C1,tanh(z_k2)];
     end
-    reconstruct=inputDecoder(2:end,size(C,2)+1:end);
+    reconstruct=inputDecoder(2:end,size(C1,2)+1:end);
     
     % predict
-    inputPredict(1,:)=[C,zeros(1,size(label,2))];%t=1
+    inputPredict(1,:)=[C1,zeros(1,size(label,2))];%t=1
     w_k3=args.WeightPredict{end}.w_k;
     b_k3=args.WeightPredict{end}.b_k;
     for t=1:size(label,1)
@@ -44,7 +50,7 @@ function [args]=LSTM_ff_bp(args,input,label)
         for lay_i=1:length(args.predictLayer)-2
             if t==1
                 inputY=zeros(1,args.predictLayer(lay_i+1));
-                inputC=zeros(1,args.predictLayer(lay_i+1));
+                inputC=C3{lay_i};%zeros(1,args.predictLayer(lay_i+1));
             else
                 inputY=y3{lay_i}(t-1,:);
                 inputC=c3{lay_i}(t-1,:);
@@ -54,15 +60,51 @@ function [args]=LSTM_ff_bp(args,input,label)
         end
         %最后一层
         z_k3=inputP*w_k3+b_k3;
-        inputPredict(t+1,:)=[C,tanh(z_k3)];
+        inputPredict(t+1,:)=[C1,tanh(z_k3)];
     end
-    predict=inputPredict(2:end,size(C,2)+1:end);
+    predict=inputPredict(2:end,size(C1,2)+1:end);
     
     %% 反向传播
     %% uncondictioned
-    % predict layer
-    [delta_c,args.WeightPredict,args.Mom.WeightPredict]=LSTM_step_bp1(args,label,predict,args.WeightPredict,args.Mom.WeightPredict,x3,in3,f3,z3,c3,o3,y3);
-    
+    % predict and reconstruction layer
+    [delta_up3,delta_c03,args.WeightPredict,args.Mom.WeightPredict]=...
+        LSTM_step_bp1(args,label,predict,args.WeightPredict,args.Mom.WeightPredict,x3,in3,f3,z3,c3,o3,y3);
+    [delta_up2,delta_c02,args.WeightDecoder,args.Mom.WeightDecoder]=...
+        LSTM_step_bp1(args,input(end:-1:1,:),reconstruct,args.WeightDecoder,args.Mom.WeightDecoder,x2,in2,f2,z2,c2,o2,y2);
+    %encoder layer
+    temp1=zeros(1,size(C1,2));
+    for i1=1:length(delta_c03)
+        temp1=temp1+delta_c03{i1}*args.TranP{i1}.w_k';
+        dw_k=C1'*delta_c03{i1};
+        args.Mom.WeightTranP{i1}.w_k=args.momentum*args.Mom.WeightTranP{i1}.w_k+dw_k;
+        args.TranP{i1}.w_k=args.TranP{i1}.w_k-args.learningrate*args.Mom.WeightTranP{i1}.w_k;
+        db_k=delta_c03{i1};
+        args.Mom.WeightTranP{i1}.b_k=args.momentum*args.Mom.WeightTranP{i1}.b_k+db_k;
+        args.TranP{i1}.b_k=args.TranP{i1}.b_k-args.learningrate*args.Mom.WeightTranP{i1}.b_k;
+    end
+    for i1=1:length(delta_c02)
+        temp1=temp1+delta_c02{i1}*args.TranR{i1}.w_k';
+        dw_k=C1'*delta_c02{i1};
+        args.Mom.WeightTranR{i1}.w_k=args.momentum*args.Mom.WeightTranR{i1}.w_k+dw_k;
+        args.TranR{i1}.w_k=args.TranR{i1}.w_k-args.learningrate*args.Mom.WeightTranR{i1}.w_k;
+        db_k=delta_c02{i1};
+        args.Mom.WeightTranR{i1}.b_k=args.momentum*args.Mom.WeightTranR{i1}.b_k+db_k;
+        args.TranR{i1}.b_k=args.TranR{i1}.b_k-args.learningrate*args.Mom.WeightTranR{i1}.b_k;
+    end
+    delta_k1=delta_up3+delta_up2+temp1;
+    dw_k1=y1{end}(end,:)'*delta_k1;
+    db_k1=delta_k1;
+    delta_up1=[zeros(size(input,1)-1,size(w_k1,1));delta_k1*w_k1'];
+    args.Mom.WeightEncoder{end}.w_k=args.momentum*args.Mom.WeightEncoder{end}.w_k+dw_k1;
+    args.Mom.WeightEncoder{end}.b_k=args.momentum*args.Mom.WeightEncoder{end}.b_k+db_k1;
+    args.WeightEncoder{end}.w_k=w_k1-args.learningrate*args.Mom.WeightEncoder{end}.w_k;
+    args.WeightEncoder{end}.b_k=b_k1-args.learningrate*args.Mom.WeightEncoder{end}.b_k;
+    % lstm layer
+    for i1=length(args.encoderLayer)-2:-1:1
+        [delta_up1,WeightEncoder,MomWeightEncoder]=LSTM_step_bp(args,delta_up1,args.WeightEncoder{i1},args.Mom.WeightEncoder{i1},x1{i1},in1{i1},f1{i1},z1{i1},c1{i1},o1{i1},y1{i1});
+        args.WeightEncoder{i1}=WeightEncoder;
+        args.Mom.WeightEncoder{i1}=MomWeightEncoder;
+    end
     %% condictioned
 %     % predict layer
 %     delta_k3=-(label-predict).*(1-predict.^2);

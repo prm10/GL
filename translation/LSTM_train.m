@@ -12,7 +12,7 @@ function [args]=LSTM_train(args)
         end
        %% Í³¼ÆÎó²î
         [~,~,errorR,errorP]=LSTM_ff(test_data,test_label,args);
-        fprintf('echo: %d\ttest error: %.4f\treconstruct error: %.4f\tpredict error: %.4f\n',i1,errorR+errorP,errorR,errorP);
+        fprintf('echo: %d\ttest error: %.4f\treconstruct error: %.4f\tpredict error: %.4f\n',i1,100*(errorR+errorP),100*errorR,100*errorP);
     end
     close(h);
 

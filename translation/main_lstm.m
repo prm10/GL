@@ -8,7 +8,7 @@ x1=normrnd(0,0.1,[T,1])+(sin(t/pi)+sin(t*0.8/pi))/2;
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
-lenInput=200;
+lenInput=10;
 lenOutput=10;
 num=10;
 index=floor(rand(num,1)*(size(x1,1)-lenInput-lenOutput));
@@ -26,16 +26,16 @@ if(exist('args','var'))
     
 else
     args.maxecho=10;
-    args.circletimes=100;
+    args.circletimes=10;
     args.momentum=0.9;
     args.learningrate=1e-5;
     % args.predictLength=1000;
     dimC=10;
     dimInput=1;
     dimOutput=1;
-    args.encoderLayer=[1,100,dimC];
-    args.decoderLayer=[dimC+dimOutput,100,dimInput];
-    args.predictLayer=[dimC+dimOutput,100,dimOutput];
+    args.encoderLayer=[1,5,dimC];
+    args.decoderLayer=[dimC+dimInput,5,dimInput];
+    args.predictLayer=[dimC+dimOutput,5,dimOutput];
     args=LSTM_initial(args);
 end
 [args]=LSTM_train(args);
