@@ -8,9 +8,9 @@ x1=normrnd(0,0.1,[T,1])+(sin(t/pi)+sin(t*0.8/pi))/2;
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
-lenInput=50;
-lenOutput=1;
-num=1;
+lenInput=100;
+lenOutput=10;
+num=10;
 index=floor(rand(num,1)*(size(x1,1)-lenInput-lenOutput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
@@ -21,18 +21,18 @@ end
 test_data=train_data;
 test_label=train_label;
 % 参数设置
-load('args.mat');
+% load('args.mat');
 if(exist('args','var'))%梯度检查
     args.maxecho=1;
     args.circletimes=1;
     args.momentum=0;
     args.learningrate=0;
     [args]=LSTM_train(args);%计算下当前的梯度
-    vname='WeightPredict{1, 1}.w_i';
+    vname='WeightEncoder{1, 1}.p_o';
     s1=strcat('dcal=args.Mom.',vname,'(1,1);');
     eval(s1);
 %     dcal=args.Mom.WeightPredict{1, 1}.w_i(1,1);
-    error_delta=1e-6/dcal;%1e-5;%
+    error_delta=1e-13/dcal;%1e-5;%
     s2=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)+error_delta;');
     eval(s2);
 %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
@@ -44,10 +44,10 @@ if(exist('args','var'))%梯度检查
     dreal=(errorR1+errorP1-errorR2-errorP2)/error_delta/2;
     accuracy=abs((dcal-dreal)/dreal)*100;
 else %初始化
-    args.maxecho=1000;
+    args.maxecho=10;
     args.circletimes=100;
     args.momentum=0.9;
-    args.learningrate=1e-3;
+    args.learningrate=1e-1;
     dimC=10;
     dimInput=1;
     dimOutput=1;
@@ -66,8 +66,3 @@ else %初始化
         ,1:size(reconstruct,1),reconstruct(end:-1:1,:),'*'...
         ,size(reconstruct,1)+1:size(reconstruct,1)+size(predict,1),predict,'*');
 end
-% [reconstruct,predict,errorR,errorP]=LSTM_ff(test_data,{zeros(100,1)},args);
-% plot(1:size(test_data{1},1),test_data{1},'--o'...
-%     ,size(test_data{1},1)+1:size(test_data{1},1)+size(test_label{1},1),test_label{1},'--o'...
-%     ,1:size(reconstruct,1),reconstruct(end:-1:1,:),'*'...
-%     ,size(reconstruct,1)+1:size(reconstruct,1)+size(predict,1),predict,'*');

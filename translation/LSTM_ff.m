@@ -23,8 +23,8 @@ for i2=1:length(input0)
     input_x11=[C1,zeros(1,size(label,2))];%t=1
     [~,~,~,~,~,~,~,predict]=LSTM_step_ff1(input_x11,C3,C1,args.WeightPredict,size(label,1));
     % º∆À„ŒÛ≤Ó
-    errorR=errorR+sum(sum((input(end:-1:1,:)-reconstruct).^2))/size(reconstruct,2);
-    errorP=errorP+sum(sum((label-predict).^2))/size(predict,2);
+    errorR=errorR+sum(sum((input(end:-1:1,:)-reconstruct).^2))/size(reconstruct,1)/size(reconstruct,2);
+    errorP=errorP+sum(sum((label-predict).^2))/size(predict,1)/size(predict,2);
 end
 errorP=errorP/length(input0)/2;
 errorR=errorR/length(input0)/2;

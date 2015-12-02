@@ -15,7 +15,7 @@ function [delta_down,delta_c0,W,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,
     end
     w_k=W{end}.w_k;
     for t=T:-1:1
-        delta_k(t,:)=(-(yout(t,:)-ypredict(t,:))+delta_up(:,lenC+1:lenC+lenO)).*(1-ypredict(t,:).^2);
+        delta_k(t,:)=(-(yout(t,:)-ypredict(t,:))/size(yout,1)+delta_up(:,lenC+1:lenC+lenO)).*(1-ypredict(t,:).^2);
         delta_up=delta_k(t,:)*w_k';
         for lay_i=length(W)-1:-1:1
             if t==T
