@@ -1,5 +1,5 @@
-function [delta_down,Weight,MomWeight]=LSTM_step_bp(args,delta_up,Weight,MomWeight,x,in2,f2,z2,c,o2,y)
-momentum=args.momentum;
+function [delta_down,MomWeight]=LSTM_step_bp(args,delta_up,Weight,MomWeight,x,in2,f2,z2,c,o2,y)
+momentum=0;%args.momentum;
 learningrate=args.learningrate;
     %% weight initial
     % input gates

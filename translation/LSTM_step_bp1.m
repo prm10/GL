@@ -1,5 +1,5 @@
-function [delta_down,delta_c0,W,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,f2,z2,c,o2,y,c0)
-    momentum=args.momentum;
+function [delta_down,delta_c0,MW]=LSTM_step_bp1(args,yout,ypredict,W,MW,x,in2,f2,z2,c,o2,y,c0)
+    momentum=0;%args.momentum;
     learningrate=args.learningrate;
     T=size(yout,1);
     lenO=size(yout,2);
