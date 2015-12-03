@@ -1,16 +1,16 @@
 clc;close all;clear all;
 rng(3);
-T=2000;
+T=500;
 t=[1:T]';
-x1=(sin(t/pi)+sin(t*0.8/pi))/4;%normrnd(0,0.1,[T,1])+
-% plot(t,x1);
+x1=(sin(t/pi)+sin(t*0.8/pi))/3;%normrnd(0,0.1,[T,1])+
+plot(t,x1,'.');
 % hist(x1,100)
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
 lenInput=10;
 lenOutput=10;
-num=1;
+num=100;
 index=floor(rand(num,1)*(size(x1,1)-lenInput-lenOutput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
@@ -21,7 +21,7 @@ end
 test_data=train_data;
 test_label=train_label;
 % 参数设置
-% load('args.mat');
+load('args.mat');
 if(exist('args','var'))%梯度检查
     args.maxecho=1;
     args.circletimes=1;
@@ -45,22 +45,23 @@ if(exist('args','var'))%梯度检查
     dreal=(errorR1+errorP1-errorR2-errorP2)/error_delta/2;
     accuracy=abs((dcal-dreal)/dreal)*100;
 else %初始化
-    args.maxecho=1000;
-    args.circletimes=1;
+    args.maxecho=400;
+    args.circletimes=100;
     args.momentum=0.9;
     args.learningrate=1e-1;
-    dimC=10;
+    args.batchsize=10;
+    dimC=20;
     dimInput=1;
     dimOutput=1;
-    layer=[10];
+    layer=[20];
     args.encoderLayer=[1,layer,dimC];
     args.decoderLayer=[dimC+dimInput,layer,dimInput];
     args.predictLayer=[dimC+dimOutput,layer,dimOutput];
     args=LSTM_initial(args);
     [args]=LSTM_train(args);
     save('args.mat','args');
-    test_data=train_data(1);
-    test_label=train_label(1);
+    test_data=train_data;
+    test_label=train_label;
     [reconstruct,predict,errorR,errorP]=LSTM_ff(test_data,test_label,args);
     plot(1:size(test_data{1},1),test_data{1},'--o'...
         ,size(test_data{1},1)+1:size(test_data{1},1)+size(test_label{1},1),test_label{1},'--o'...
