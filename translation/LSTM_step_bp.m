@@ -1,22 +1,22 @@
-function [delta_down,MomWeight]=LSTM_step_bp(args,delta_up,Weight,MomWeight,x,in2,f2,z2,c,o2,y)
+function [delta_down,MW]=LSTM_step_bp(args,delta_up,W,MW,x,in2,f2,z2,c,o2,y)
 momentum=0;%args.momentum;
 learningrate=args.learningrate;
     %% weight initial
     % input gates
-    w_i=Weight.w_i;
-    r_i=Weight.r_i;
-    p_i=Weight.p_i;
+    w_i=W.w_i;
+    r_i=W.r_i;
+    p_i=W.p_i;
     % forget gates
-    w_f=Weight.w_f;
-    r_f=Weight.r_f;
-    p_f=Weight.p_f;
+    w_f=W.w_f;
+    r_f=W.r_f;
+    p_f=W.p_f;
     % cells
-    w_z=Weight.w_z;
-    r_z=Weight.r_z;
+    w_z=W.w_z;
+    r_z=W.r_z;
     % output gates
-    w_o=Weight.w_o;
-    r_o=Weight.r_o;
-    p_o=Weight.p_o;
+    w_o=W.w_o;
+    r_o=W.r_o;
+    p_o=W.p_o;
     %%
     T=size(delta_up,1);
     t=T;
@@ -63,35 +63,35 @@ learningrate=args.learningrate;
     dp_f=sum(c(1:end-1,:).*delta_f(2:end,:));
     dp_o=sum(c.*delta_o);
     
-    MomWeight.w_o=momentum*MomWeight.w_o+dw_o;
-    MomWeight.w_f=momentum*MomWeight.w_f+dw_f;
-    MomWeight.w_i=momentum*MomWeight.w_i+dw_i;
-    MomWeight.w_z=momentum*MomWeight.w_z+dw_z;
-    MomWeight.r_o=momentum*MomWeight.r_o+dr_o;
-    MomWeight.r_f=momentum*MomWeight.r_f+dr_f;
-    MomWeight.r_i=momentum*MomWeight.r_i+dr_i;
-    MomWeight.r_z=momentum*MomWeight.r_z+dr_z;
-    MomWeight.p_o=momentum*MomWeight.p_o+dp_o;
-    MomWeight.p_f=momentum*MomWeight.p_f+dp_f;
-    MomWeight.p_i=momentum*MomWeight.p_i+dp_i;
+    MW.w_o=momentum*MW.w_o+dw_o;
+    MW.w_f=momentum*MW.w_f+dw_f;
+    MW.w_i=momentum*MW.w_i+dw_i;
+    MW.w_z=momentum*MW.w_z+dw_z;
+    MW.r_o=momentum*MW.r_o+dr_o;
+    MW.r_f=momentum*MW.r_f+dr_f;
+    MW.r_i=momentum*MW.r_i+dr_i;
+    MW.r_z=momentum*MW.r_z+dr_z;
+    MW.p_o=momentum*MW.p_o+dp_o;
+    MW.p_f=momentum*MW.p_f+dp_f;
+    MW.p_i=momentum*MW.p_i+dp_i;
 %     max_gradient=max([max(max(abs(delta_o))),max(max(abs(delta_f))),max(max(abs(delta_i))),max(max(abs(delta_z))),...
 %         max(max(abs(delta_y))),max(max(abs(delta_c)))])
     %% weight update
     % input gates
-    Weight.w_i=w_i-learningrate*MomWeight.w_i;
-    Weight.r_i=r_i-learningrate*MomWeight.r_i;
-    Weight.p_i=p_i-learningrate*MomWeight.p_i;
+    W.w_i=w_i-learningrate*MW.w_i;
+    W.r_i=r_i-learningrate*MW.r_i;
+    W.p_i=p_i-learningrate*MW.p_i;
     % forget gates
-    Weight.w_f=w_f-learningrate*MomWeight.w_f;
-    Weight.r_f=r_f-learningrate*MomWeight.r_f;
-    Weight.p_f=p_f-learningrate*MomWeight.p_f;
+    W.w_f=w_f-learningrate*MW.w_f;
+    W.r_f=r_f-learningrate*MW.r_f;
+    W.p_f=p_f-learningrate*MW.p_f;
     % cells
-    Weight.w_z=w_z-learningrate*MomWeight.w_z;
-    Weight.r_z=r_z-learningrate*MomWeight.r_z;
+    W.w_z=w_z-learningrate*MW.w_z;
+    W.r_z=r_z-learningrate*MW.r_z;
     % output gates
-    Weight.w_o=w_o-learningrate*MomWeight.w_o;
-    Weight.r_o=r_o-learningrate*MomWeight.r_o;
-    Weight.p_o=p_o-learningrate*MomWeight.p_o;
+    W.w_o=w_o-learningrate*MW.w_o;
+    W.r_o=r_o-learningrate*MW.r_o;
+    W.p_o=p_o-learningrate*MW.p_o;
 function y=dsigmoid(z)
     y=z.*(1-z);
 function y=dtanh(z)
