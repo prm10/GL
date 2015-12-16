@@ -14,13 +14,33 @@ plotvariable;
 % test_label=[test_label;x1(range2,:)];
 i1=1;
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-i2=2;%:length(input0)
-data=input0{i2}(:,commenDim{GL(i1)});
-figure;%datestr(time0{2}(end),'yyyy-mm-dd HH:MM:SS')
-for i1=1:6
-    subplot(3,2,i1);
-    plot(data(:,ipt(i1)));
-    title(commenVar{ipt(i1)});
+i2=1;%:length(input0)
+data1=input0{i2}(:,commenDim{GL(i1)});
+
+%%
+coldWind=data1(:,8);
+md=zeros(length(coldWind),1);
+sd=zeros(length(coldWind),1);
+for i1=1:length(coldWind)
+    index=(max(1,i1-360):i1);
+    tempData=coldWind(index);
+    md(i1)=median(tempData);
+    sd(i1)=std(tempData);
 end
+flag=(coldWind-md)./sd;
+figure;
+subplot(211);
+plot(coldWind,'.');
+subplot(212);
+plot(flag,'.');
+
+% figure;%datestr(time0{2}(end),'yyyy-mm-dd HH:MM:SS')
+% for i1=1:6
+%     subplot(3,2,i1);
+%     plot(data1(:,ipt(i1)));%1e4:end
+%     title(commenVar{ipt(i1)});
+% end
+
+
 % [input,decode,predict]=GenerateData(data,lengthD,lengthP,indexD,indexP);
-    
+
