@@ -18,7 +18,7 @@ function [args]=LSTM_train(args)
         end
        %% Í³¼ÆÎó²î
         [~,~,errorR,errorP]=LSTM_ff(test_data,test_label,args);
-        fprintf('echo: %d\ttest error: %.4f\treconstruct error: %.4f\tpredict error: %.4f\n',i1,100*(errorR+errorP),100*errorR,100*errorP);
+        fprintf('echo: %d\ttest error: %.4f\treconstruct error: %.4f\tpredict error: %.4f\n',i1,1e4*(errorR+errorP),1e4*errorR,1e4*errorP);
     end
     close(h);
 %     delete(poolobj);

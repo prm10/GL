@@ -1,5 +1,5 @@
 clc;close all;clear all;
-rng(3);
+rng(12);
 T=1000;
 t=[1:T]';
 x1=(sin(t/pi)+sin(t*0.8/pi))/3;%normrnd(0,0.1,[T,1])+
@@ -21,7 +21,7 @@ for i1=1:num
     train_label=[train_label;x1(range2,:)];
 end
 
-num=10;
+num=100;
 index=floor(rand(num,1)*(size(x1,1)-lenInput-lenOutput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
@@ -52,9 +52,9 @@ switch choice
         [args]=LSTM_train(args);
         save('args.mat','args');
     case 2%ºÃ–¯‘ÀÀ„
-        load('args.mat');
-        args.maxecho=1000;
-        args.circletimes=100;
+        load('args_20151215_best.mat');
+        args.maxecho=1;
+        args.circletimes=1;
 %         args.momentum=0.9;
 %         args.learningrate=1e-1;
 %         args.batchsize=10;
@@ -85,8 +85,8 @@ switch choice
         accuracy=abs((dcal-dreal)/dreal)*100;
 end
 
-i1=2;
-[reconstruct,predict,errorR,errorP]=LSTM_ff(test_data(i1),test_label(i1),args);
+i1=3;
+[reconstruct,predict,errorR,errorP]=LSTM_ff(test_data(i1),{zeros(200,1)},args);%test_label(i1)
 figure;
 plot(1:size(test_data{i1},1),test_data{i1},'--o'...
     ,size(test_data{i1},1)+1:size(test_data{i1},1)+size(test_label{i1},1),test_label{i1},'--o'...
