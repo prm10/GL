@@ -96,7 +96,7 @@ switch choice
         args.maxecho=100;
         args.circletimes=100;
         args.momentum=0.9;
-        args.learningrate=1e-1;
+        args.learningrate=1e-2;
         args.batchsize=4;
         [args]=fsc_train(args);
         save(args_name,'args');
