@@ -3,26 +3,18 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-% global train_data train_label test_data test_label;
-% train_data=cell(0);
-% train_label=cell(0);
-% test_data=cell(0);
-% test_label=cell(0);
-% train_data=[train_data;x1(range1,:)];
-% train_label=[train_label;x1(range2,:)];
-% test_data=[test_data;x1(range1,:)];
-% test_label=[test_label;x1(range2,:)];
 i1=1;
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
 i2=4;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
 
-%%
+
 i0=17;
 hotWindPress=data1(:,i0);
-% [indexChange]=FindStoveChange(hotWindPress);
+[indexChange]=FindStoveChange(hotWindPress);
 % figure;
 % plot(find(~indexChange),hotWindPress(~indexChange),'b.',find(indexChange),hotWindPress(indexChange),'r.');
+
 
 % md=zeros(length(hotWindPress),1);
 % sd=zeros(length(hotWindPress),1);
@@ -54,12 +46,14 @@ hotWindPress=data1(:,i0);
 
 % [input,decode,predict]=GenerateData(data,lengthD,lengthP,indexD,indexP);
 
+
+%% 
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
 rng(3);
-lenInput=720;
-lenOutput=10;
+lenInput=360;
+lenOutput=1;
 num=10000;
 index=floor(rand(num,1)*(size(hotWindPress,1)-lenInput-lenOutput));
 for i1=1:num
@@ -81,7 +75,6 @@ for i1=1:num
     test_label=[test_label;hotWindPress(range2,:)];
 end
 
-
 % 参数设置
 choice=2;
 switch choice
@@ -95,7 +88,7 @@ switch choice
         dimC=10;
         dimInput=1;
         dimOutput=1;
-        layer=[50];
+        layer=[100];
         args.encoderLayer=[dimInput,layer,dimC];
         args.decoderLayer=[dimC+dimInput,layer,dimInput];
         args.predictLayer=[dimC+dimOutput,layer,dimOutput];
@@ -104,9 +97,9 @@ switch choice
         save('args_hot_wind_pressure.mat','args');
     case 2%继续运算
         load('args_hot_wind_pressure.mat');
-        args.maxecho=300;
+        args.maxecho=100;
         args.circletimes=100;
-%         args.momentum=0.9;
+        args.momentum=0.99;
 %         args.learningrate=1e-1;
         args.batchsize=10;
         [args]=LSTM_train(args);

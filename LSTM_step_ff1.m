@@ -1,4 +1,4 @@
-function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff1(input_x11,input_c0,input_xC,Weight,T)
+function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff1(input_x11,input_c0,input_xC,Weight,T,outputLayer)
     if(size(input_x11,2)==size(input_xC,2))%编码,input_c0为0，input_xC为输入
         inputX0=input_xC;
         w_k=Weight{end}.w_k;
@@ -18,7 +18,13 @@ function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff1(input_x11,input_c0,input_x
             end
             %最后一层
             z_k2=inputX*w_k+b_k;
-            output(t,:)=tanh(z_k2);
+            switch outputLayer
+                case{'softmax'}
+                    temp=exp(z_k2-max(z_k2));
+                    output(t,:)=temp/sum(temp);
+                otherwise
+                    output(t,:)=tanh(z_k2);
+            end
         end
     else%解码或预测,input_xC为C1
         inputX0(1,:)=input_x11;%[C1,zeros(1,size(input,2))];

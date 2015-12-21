@@ -1,1 +1,0 @@
-torch.setdefaulttensortype('torch.FloatTensor')
