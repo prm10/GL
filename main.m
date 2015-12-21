@@ -76,7 +76,7 @@ for i1=1:num
 end
 
 % 参数设置
-choice=2;
+choice=3;
 switch choice
     case 1%初始化
         args.maxecho=10;

@@ -1,12 +1,12 @@
 clc;close all;clear;
-%{
+%
 No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-i1=1;
+i1=1;%高炉编号
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-i2=4;%:length(input0)
+i2=3;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
 
 i0=17;
@@ -22,47 +22,46 @@ coldWind=data1(:,8);
 %     sd(i1)=std(tempData);
 % end
 % flag=(hotWindPress-md)./sd;
-flag=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
-flag=[0;flag/std(flag)];
+dHWP=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
+dHWP=[0;dHWP/std(dHWP)];
 
 [indexChange]=FindStoveChange(hotWindPress);
 figure;
 subplot(311);
 plot(find(~indexChange),hotWindPress(~indexChange),'b.',find(indexChange),hotWindPress(indexChange),'r.');
 subplot(312);
-plot(find(~indexChange),flag(~indexChange),'b.',find(indexChange),flag(indexChange),'r.');
+plot(find(~indexChange),dHWP(~indexChange),'b.',find(indexChange),dHWP(indexChange),'r.');
 subplot(313);
 plot(find(~indexChange),coldWind(~indexChange),'b.',find(indexChange),coldWind(indexChange),'r.');
 % figure;
 % plot(find(~indexChange),hotWindPress(~indexChange),'b.',find(indexChange),hotWindPress(indexChange),'r.');
 
-
 delay=50;
-hotWindPress=flag;
 hotWindPressLabel=[false(delay,1);indexChange(1:end-delay,1)];
-save('fscData.mat','hotWindPress','hotWindPressLabel','delay');
+save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','delay');
 %}
 %%
 load('fscData.mat');
-range=1:1000;
+% range=1:1000;
 % figure;
 % subplot(211);
 % plot(hotWindPress(range,:));
 % subplot(212);
 % plot(hotWindPressLabel(range,:));
 
+%{
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
 train_len=2e4;
-test_len=size(hotWindPress,1)-train_len;
+test_len=size(dHWP,1)-train_len;
 rng(3);
 lenInput=1000;
 num=100;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
-    train_data=[train_data;hotWindPress(range1,:)];
+    train_data=[train_data;dHWP(range1,:)];
     train_label=[train_label;[hotWindPressLabel(range1,:),~hotWindPressLabel(range1,:)]];
 end
 
@@ -72,13 +71,13 @@ num=10;
 index=floor(rand(num,1)*(test_len-lenInput))+train_len;
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
-    test_data=[test_data;hotWindPress(range1,:)];
+    test_data=[test_data;dHWP(range1,:)];
     test_label=[test_label;[hotWindPressLabel(range1,:),~hotWindPressLabel(range1,:)]];
 end
 
 % 参数设置
 args_name='args_fsc.mat';
-choice=2;
+choice=3;
 switch choice
     case 1%初始化
         args.maxecho=10;
@@ -138,6 +137,17 @@ subplot(312);
 plot(find(~range2),data(~range2),'b.',find(range2),data(range2),'r.');
 subplot(313);
 plot(predict(delay+1:end,1));
-
-
-
+%}
+load 'args_fsc.mat';
+[predict,~]=fsc_ff({dHWP},{[hotWindPressLabel,~hotWindPressLabel]},args);
+data=hotWindPress(1:end-delay,1);
+range1=hotWindPressLabel(delay+1:end,1);
+predict_label=predict>0.7;
+range2=predict_label(delay+1:end,1);
+figure;
+subplot(311);
+plot(find(~range1),data(~range1),'b.',find(range1),data(range1),'r.');
+subplot(312);
+plot(find(~range2),data(~range2),'b.',find(range2),data(range2),'r.');
+subplot(313);
+plot(predict(delay+1:end,1));
