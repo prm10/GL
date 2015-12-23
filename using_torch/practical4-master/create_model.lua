@@ -20,7 +20,7 @@ function create_model(opt)
     model:add(nn.Sigmoid())
   else
     error('undefined nonlinearity_type ' .. tostring(opt.nonlinearity_type))
-  end 
+  end
 
   model:add(nn.Linear(embedding_dim, n_classes))
   model:add(nn.LogSoftMax())
@@ -34,4 +34,3 @@ function create_model(opt)
 end
 
 return create_model
-

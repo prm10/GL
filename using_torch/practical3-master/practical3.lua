@@ -229,4 +229,5 @@ local _, classPredictions = torch.max(classProbabilities, 2)
 -- classPredictions holds predicted classes from 1-10
 
 -- TODO: compute test classification error here for the second handin item
-torch.Tensor:
+local test_loss = criterion:forward(logProbs, test.labels)
+print(string.format("final test error is %6.6f",test_loss))
