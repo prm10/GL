@@ -37,9 +37,9 @@ gnuplot.plot({'sigmoid',
   -- '-'}
   )
 
-models = {
+models = { 
     --requ = model_requ,  -- TODO: uncomment once you implement requ
-    sigmoid = model_sigmoid
+    sigmoid = model_sigmoid 
 }
 for model_name, model in pairs(models) do
   -- classification error on train set
@@ -69,3 +69,4 @@ for model_name, model in pairs(models) do
   gnuplot.figure()
   gnuplot.imagesc(result, model_name)
 end
+

@@ -58,3 +58,4 @@ local function train(opt, data)
 end
 
 return train
+
