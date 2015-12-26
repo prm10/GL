@@ -37,19 +37,20 @@ end
 args.Mom=tdw;
 %% 更新权值
 lr=args.learningrate;
+wd=args.weightDecay;
 for i2=1:length(tdw.Weight)-1
-    args.Weight{i2}.w_i=args.Weight{i2}.w_i-lr*tdw.Weight{i2}.w_i;
-    args.Weight{i2}.r_i=args.Weight{i2}.r_i-lr*tdw.Weight{i2}.r_i;
-    args.Weight{i2}.p_i=args.Weight{i2}.p_i-lr*tdw.Weight{i2}.p_i;
-    args.Weight{i2}.w_f=args.Weight{i2}.w_f-lr*tdw.Weight{i2}.w_f;
-    args.Weight{i2}.r_f=args.Weight{i2}.r_f-lr*tdw.Weight{i2}.r_f;
-    args.Weight{i2}.p_f=args.Weight{i2}.p_f-lr*tdw.Weight{i2}.p_f;
-    args.Weight{i2}.w_z=args.Weight{i2}.w_z-lr*tdw.Weight{i2}.w_z;
-    args.Weight{i2}.r_z=args.Weight{i2}.r_z-lr*tdw.Weight{i2}.r_z;
-    args.Weight{i2}.w_o=args.Weight{i2}.w_o-lr*tdw.Weight{i2}.w_o;
-    args.Weight{i2}.r_o=args.Weight{i2}.r_o-lr*tdw.Weight{i2}.r_o;
-    args.Weight{i2}.p_o=args.Weight{i2}.p_o-lr*tdw.Weight{i2}.p_o;
+    args.Weight{i2}.w_i=(1-lr*wd)*args.Weight{i2}.w_i-lr*tdw.Weight{i2}.w_i;
+    args.Weight{i2}.r_i=(1-lr*wd)*args.Weight{i2}.r_i-lr*tdw.Weight{i2}.r_i;
+    args.Weight{i2}.p_i=(1-lr*wd)*args.Weight{i2}.p_i-lr*tdw.Weight{i2}.p_i;
+    args.Weight{i2}.w_f=(1-lr*wd)*args.Weight{i2}.w_f-lr*tdw.Weight{i2}.w_f;
+    args.Weight{i2}.r_f=(1-lr*wd)*args.Weight{i2}.r_f-lr*tdw.Weight{i2}.r_f;
+    args.Weight{i2}.p_f=(1-lr*wd)*args.Weight{i2}.p_f-lr*tdw.Weight{i2}.p_f;
+    args.Weight{i2}.w_z=(1-lr*wd)*args.Weight{i2}.w_z-lr*tdw.Weight{i2}.w_z;
+    args.Weight{i2}.r_z=(1-lr*wd)*args.Weight{i2}.r_z-lr*tdw.Weight{i2}.r_z;
+    args.Weight{i2}.w_o=(1-lr*wd)*args.Weight{i2}.w_o-lr*tdw.Weight{i2}.w_o;
+    args.Weight{i2}.r_o=(1-lr*wd)*args.Weight{i2}.r_o-lr*tdw.Weight{i2}.r_o;
+    args.Weight{i2}.p_o=(1-lr*wd)*args.Weight{i2}.p_o-lr*tdw.Weight{i2}.p_o;
 end
-args.Weight{end}.w_k=args.Weight{end}.w_k-lr*tdw.Weight{end}.w_k;
-args.Weight{end}.b_k=args.Weight{end}.b_k-lr*tdw.Weight{end}.b_k;
+args.Weight{end}.w_k=(1-lr*wd)*args.Weight{end}.w_k-lr*tdw.Weight{end}.w_k;
+args.Weight{end}.b_k=(1-lr*wd)*args.Weight{end}.b_k-lr*tdw.Weight{end}.b_k;
 

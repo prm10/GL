@@ -10,7 +10,7 @@ end
 flag=(hotWindPress-md);
 avgLength=338;
 lastChange=0;
-width=100;
+width=60;
 indexChange=false(length(hotWindPress),1);
 while lastChange<length(hotWindPress)-avgLength
     len0=lastChange;
