@@ -50,7 +50,7 @@ save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
 % subplot(212);
 % plot(hotWindPressLabel(range,:));
 
-%
+%{
 load('fscDataTrain.mat');
 global train_data train_label test_data test_label;
 train_data=cell(0);
@@ -89,7 +89,7 @@ switch choice
         args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=1e-5;
-        args.learningrate=5e-2;
+        args.learningrate=1e-1;
         args.batchsize=1;
         args.layer=[1,10,2];
         args.outputLayer='softmax';
@@ -146,10 +146,10 @@ plot(predict(delay+1:end,1));
 %}
 
 %%
-%{
+%
 load('fscData.mat');
-load 'args_fsc.mat';
-[predict,~]=fsc_ff({[sHWP,dHWP]},{[hotWindPressLabel,~hotWindPressLabel]},args);
+load 'args_fsc_1221_best.mat';
+[predict,~]=fsc_ff({dHWP},{[hotWindPressLabel,~hotWindPressLabel]},args);
 data=hotWindPress(1:end-delay,1);
 range1=hotWindPressLabel(delay+1:end,1); 
 predict_label=predict>0.7;
