@@ -10,7 +10,7 @@ function LSTM.lstm(opt)
 
     function new_input_sum()
         -- transforms input
-        local i2h            = nn.Linear(opt.rnn_size, opt.rnn_size)(x)
+        local i2h            = nn.Linear(opt.rnn_size, opt.rnn_size)(x)--默认输入size与lstm的一样了？！
         -- transforms previous timestep's output
         local h2h            = nn.Linear(opt.rnn_size, opt.rnn_size)(prev_h)
         return nn.CAddTable()({i2h, h2h})
@@ -31,4 +31,3 @@ function LSTM.lstm(opt)
 end
 
 return LSTM
-

@@ -1,4 +1,4 @@
-function args=fsc_train(args)
+function [args]=fsc_train(args)
     global train_data train_label test_data test_label;
     tic;
     h=waitbar(0);
@@ -18,6 +18,7 @@ function args=fsc_train(args)
        %% Í³¼ÆÎó²î
         [~,error]=fsc_ff(test_data,test_label,args);
         fprintf('echo: %d \t test error: %.4f\n',i1,1e4*error);
+        args.Er=[args.Er;error];
     end
     close(h);
     toc;

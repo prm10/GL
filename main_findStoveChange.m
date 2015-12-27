@@ -50,59 +50,65 @@ save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
 % subplot(212);
 % plot(hotWindPressLabel(range,:));
 
-%{
-load('fscDataTrain.mat');
+%
+load('fscDataHWP.mat');
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
-train_len=2e4;
-test_len=size(sHWP,1)-train_len;
+train_len=size(dataTrain,1);
+test_len=size(dataTest,1);
 rng(3);
 lenInput=1000;
-num=1;
-% index=1:size(dHWP,1);
+num=50;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
-%     range1=index(i1)+1:index(i1)+lenInput;
-    range1=1:size(dHWP,1);
-    train_data=[train_data;[dHWP(range1,:)]];
-    train_label=[train_label;[hotWindPressLabel(range1,:),~hotWindPressLabel(range1,:)]];
+    range1=index(i1)+1:index(i1)+lenInput;
+%     range1=1:size(dHWP,1);
+    train_data=[train_data;[dataTrain(range1,:)]];
+    a=labelTrain(range1,:);
+    a(1+delay:lenInput,1)=a(1:lenInput-delay,1);
+    a(1:delay,1)=false;
+    train_label=[train_label;[a,~a]];
 end
 
 test_data=cell(0);
 test_label=cell(0);
-num=1;
-index=floor(rand(num,1)*(test_len-lenInput))+train_len;
+num=10;
+index=floor(rand(num,1)*(test_len-lenInput));
 for i1=1:num
-%     range1=index(i1)+1:index(i1)+lenInput;
-    range1=1:size(dHWP,1);
-    test_data=[test_data;[dHWP(range1,:)]];
-    test_label=[test_label;[hotWindPressLabel(range1,:),~hotWindPressLabel(range1,:)]];
+    range1=index(i1)+1:index(i1)+lenInput;
+%     range1=1:size(dHWP,1);
+    test_data=[test_data;[dataTest(range1,:)]];
+    a=labelTest(range1,:);
+    a(1+delay:lenInput,1)=a(1:lenInput-delay,1);
+    a(1:delay,1)=false;
+    test_label=[test_label;[a,~a]];
 end
 
 % 参数设置
 args_name='args_fsc.mat';
-choice=2;
+choice=1;
 switch choice
     case 1%初始化
-        args.maxecho=30;
-        args.circletimes=100;
+        args.maxecho=10;
+        args.circletimes=10;
         args.momentum=0.9;
         args.weightDecay=1e-5;
         args.learningrate=1e-1;
-        args.batchsize=1;
+        args.batchsize=3;
         args.layer=[1,10,2];
+        args.Er=[];
         args.outputLayer='softmax';
         args=fsc_initial(args);
         [args]=fsc_train(args);
         save(args_name,'args');
     case 2%继续运算
         load(args_name);
-        args.maxecho=50;
+        args.maxecho=20;
         args.circletimes=100;
-        args.momentum=0.5;
-        args.learningrate=5e-2;
-%         args.batchsize=4;
+%         args.momentum=0.5;
+%         args.learningrate=5e-2;
+        args.batchsize=3;
         [args]=fsc_train(args);
         save(args_name,'args');
     case 3%梯度检验
@@ -130,6 +136,12 @@ switch choice
         accuracy=abs((dcal-dreal)/dreal)*100;
 end
 
+figure;
+plot((1:length(args.Er))*100,args.Er);
+title('误差下降曲线');
+xlabel('迭代次数');
+ylabel('误差');
+
 i1=1;
 [predict,error2]=fsc_ff(test_data(i1),test_label(i1),args);
 data=test_data{i1}(1:end-delay,1);
@@ -146,7 +158,7 @@ plot(predict(delay+1:end,1));
 %}
 
 %%
-%
+%{
 load('fscData.mat');
 load 'args_fsc_1221_best.mat';
 [predict,~]=fsc_ff({dHWP},{[hotWindPressLabel,~hotWindPressLabel]},args);

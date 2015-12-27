@@ -41,7 +41,7 @@ local vocab_size = loader.vocab_size  -- the number of distinct characters
 -- define model prototypes for ONE timestep, then clone them
 --
 local protos = {}
-protos.embed = Embedding(vocab_size, opt.rnn_size)
+protos.embed = Embedding(vocab_size, opt.rnn_size)--默认embedding的输出的size跟lstm一样了？
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
 protos.lstm = LSTM.lstm(opt)
 protos.softmax = nn.Sequential():add(nn.Linear(opt.rnn_size, vocab_size)):add(nn.LogSoftMax())
@@ -72,7 +72,7 @@ function feval(params_)
         params:copy(params_)
     end
     grad_params:zero()
-    
+
     ------------------ get minibatch -------------------
     local x, y = loader:next_batch()
 
@@ -103,7 +103,7 @@ function feval(params_)
     for t=opt.seq_length,1,-1 do
         -- backprop through loss, and softmax/linear
         local doutput_t = clones.criterion[t]:backward(predictions[t], y[{{}, t}])
-        -- Two cases for dloss/dh_t: 
+        -- Two cases for dloss/dh_t:
         --   1. h_T is only used once, sent to the softmax (but not to the next LSTM timestep).
         --   2. h_t is used twice, for the softmax and for the next step. To obey the
         --      multivariate chain rule, we add them.
@@ -116,7 +116,7 @@ function feval(params_)
 
         -- backprop through LSTM timestep
         dembeddings[t], dlstm_c[t-1], dlstm_h[t-1] = unpack(clones.lstm[t]:backward(
-            {embeddings[t], lstm_c[t-1], lstm_h[t-1]},
+            {embeddings[t], lstm_c[t-1], lstm_h[t-1]},--x,c0,h0
             {dlstm_c[t], dlstm_h[t]}
         ))
 
@@ -150,5 +150,3 @@ for i = 1, iterations do
         print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f, gradnorm = %6.4e", i, loss[1], loss[1] / opt.seq_length, grad_params:norm()))
     end
 end
-
-
