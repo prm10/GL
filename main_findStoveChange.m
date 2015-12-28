@@ -1,31 +1,18 @@
 clc;close all;clear;
-%{
+%
 No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-i1=1;%高炉编号
+i1=3;%高炉编号
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-i2=4;%:length(input0)
+i2=1;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
 
 i0=17;
 hotWindPress=data1(:,i0);
 coldWind=data1(:,8);
-
-md=zeros(length(hotWindPress),1);
-sd=zeros(length(hotWindPress),1);
-for i1=1:length(hotWindPress)
-    index=(max(1,i1-720):i1);
-    tempData=hotWindPress(index);
-    md(i1)=median(tempData);
-    sd(i1)=std(tempData);
-end
-sHWP=(hotWindPress-md)./max(sd,0.0001);
-dHWP=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
-dHWP=[0;dHWP/std(dHWP)];
-
-[indexChange]=FindStoveChange(hotWindPress);
+[indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
 figure;
 subplot(311);
 plot(find(~indexChange),hotWindPress(~indexChange),'b.',find(indexChange),hotWindPress(indexChange),'r.');
@@ -36,7 +23,7 @@ plot(find(~indexChange),sHWP(~indexChange),'b.',find(indexChange),sHWP(indexChan
 % figure;
 % plot(find(~indexChange),hotWindPress(~indexChange),'b.',find(indexChange),hotWindPress(indexChange),'r.');
 
-delay=50;
+delay=60;
 hotWindPressLabel=[false(delay,1);indexChange(1:end-delay,1)];
 save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
 %}
@@ -50,7 +37,7 @@ save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
 % subplot(212);
 % plot(hotWindPressLabel(range,:));
 
-%
+%{
 load('fscDataHWP.mat');
 global train_data train_label test_data test_label;
 train_data=cell(0);
@@ -87,16 +74,16 @@ end
 
 % 参数设置
 args_name='args_fsc.mat';
-choice=1;
+choice=2;
 switch choice
     case 1%初始化
         args.maxecho=10;
-        args.circletimes=10;
+        args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=1e-5;
         args.learningrate=1e-1;
         args.batchsize=3;
-        args.layer=[1,10,2];
+        args.layer=[1,20,2];
         args.Er=[];
         args.outputLayer='softmax';
         args=fsc_initial(args);
@@ -104,7 +91,7 @@ switch choice
         save(args_name,'args');
     case 2%继续运算
         load(args_name);
-        args.maxecho=20;
+        args.maxecho=100;
         args.circletimes=100;
 %         args.momentum=0.5;
 %         args.learningrate=5e-2;
@@ -158,13 +145,21 @@ plot(predict(delay+1:end,1));
 %}
 
 %%
-%{
+load 'args_fsc.mat';
+
 load('fscData.mat');
-load 'args_fsc_1221_best.mat';
-[predict,~]=fsc_ff({dHWP},{[hotWindPressLabel,~hotWindPressLabel]},args);
+label=hotWindPressLabel;
+[predict,Er]=fsc_ff({dHWP},{[hotWindPressLabel,~hotWindPressLabel]},args);
 data=hotWindPress(1:end-delay,1);
-range1=hotWindPressLabel(delay+1:end,1); 
-predict_label=predict>0.7;
+range1=hotWindPressLabel(delay+1:end,1);
+
+% load('fscDataHWP.mat');
+% label=[false(delay,1);labelTrain(1:end-delay,1)];
+% [predict,Er]=fsc_ff({dataTrain},{[label,~label]},args);
+% data=data0Train(1:end-delay,1);
+
+range1=label(delay+1:end,1);
+predict_label=predict>0.5;
 range2=predict_label(delay+1:end,1);
 figure;
 subplot(311);

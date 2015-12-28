@@ -43,7 +43,7 @@ local vocab_size = loader.vocab_size  -- the number of distinct characters
 local protos = {}
 protos.embed = Embedding(vocab_size, opt.rnn_size)--默认embedding的输出的size跟lstm一样了？
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
-protos.lstm = LSTM.lstm(opt)
+protos.lstm = LSTM.lstm(opt.input_size,opt.rnn_size)
 protos.softmax = nn.Sequential():add(nn.Linear(opt.rnn_size, vocab_size)):add(nn.LogSoftMax())
 protos.criterion = nn.ClassNLLCriterion()
 
