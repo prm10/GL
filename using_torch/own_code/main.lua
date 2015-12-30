@@ -15,19 +15,20 @@ cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',10,'number of batch')
-cmd:option('-batch_size',30,'number of sequences to train on in parallel')
-cmd:option('-seq_length',20,'length of sequences to train on in parallel')
-cmd:option('-delay',6,'time delay between targets and label')
+cmd:option('-batch_size',20,'number of sequences to train on in parallel')
+cmd:option('-seq_length',2000,'length of sequences to train on in parallel')
+cmd:option('-delay',60,'time delay between targets and label')
 
 cmd:option('-input_size',1,'size of input')
-cmd:option('-rnn_size',5,'size of LSTM internal state')
+cmd:option('-rnn_size',20,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
 cmd:option('-max_epochs',10,'number of full passes through the training data')
 cmd:option('-save_every',100,'save every 100 steps, overwriting the existing file')
 cmd:option('-print_every',100,'how many steps/minibatches between printing out the loss')
 cmd:option('-savefile','model_autosave','filename to autosave the model (protos) to, appended with the,param,string.t7')
-
+cmd:option('-vocabfile','vocabfile.t7','filename of the string->int table')
+cmd:option('-datafile','datafile.t7','filename of the serialized torch ByteTensor to load')
 cmd:text()
 
 -- parse input params
@@ -92,21 +93,12 @@ function feval(params_)
     local lstm_h = {[0]=initstate_h} -- output values of LSTM
     local predictions = {}           -- softmax outputs
     local loss = 0
-    print(x[{{}, 1}]:size())
-    print(lstm_c[0]:size())
-    print(lstm_h[0]:size())
     for t=1,opt.seq_length do
-        print('time: '..t)
         -- we're feeding the *correct* things in here, alternatively
         -- we could sample from the previous timestep and embed that, but that's
         -- more commonly done for LSTM encoder-decoder models
-        input=torch.zeros(opt.batch_size, opt.input_size):copy(x[{{}, t}])
-        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{input, lstm_c[t-1], lstm_h[t-1]})
+        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[{{}, t}]:resize(opt.batch_size, opt.input_size), lstm_c[t-1], lstm_h[t-1]})
         predictions[t] = clones.softmax[t]:forward(lstm_h[t])
-        -- print("predictions[t]")
-        -- print(predictions[t])
-        -- print("y[{{}, t}]")
-        -- print(y[{{}, t}])
         loss = loss + clones.criterion[t]:forward(predictions[t], y[{{}, t}])
     end
 
@@ -150,8 +142,8 @@ function feval(params_)
     return loss, grad_params
 end
 
-feval(params)
---[[
+-- feval(params)
+--[
 -- optimization stuff
 local losses = {}
 local optim_state = {learningRate = 1e-1}
