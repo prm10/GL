@@ -43,7 +43,7 @@ local vocab_size = loader.vocab_size  -- the number of distinct characters
 local protos = {}
 protos.embed = Embedding(vocab_size, opt.rnn_size)--默认embedding的输出的size跟lstm一样了？
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
-protos.lstm = LSTM.lstm(opt.input_size,opt.rnn_size)
+protos.lstm = LSTM.lstm(opt)
 protos.softmax = nn.Sequential():add(nn.Linear(opt.rnn_size, vocab_size)):add(nn.LogSoftMax())
 protos.criterion = nn.ClassNLLCriterion()
 
@@ -75,7 +75,8 @@ function feval(params_)
 
     ------------------ get minibatch -------------------
     local x, y = loader:next_batch()
-
+    print("x:size()")
+    print(x:size())
     ------------------- forward pass -------------------
     local embeddings = {}            -- input embeddings
     local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
@@ -85,7 +86,8 @@ function feval(params_)
 
     for t=1,opt.seq_length do
         embeddings[t] = clones.embed[t]:forward(x[{{}, t}])
-
+        print("embeddings[t]:size()")
+        print(embeddings[t]:size())
         -- we're feeding the *correct* things in here, alternatively
         -- we could sample from the previous timestep and embed that, but that's
         -- more commonly done for LSTM encoder-decoder models
@@ -135,6 +137,8 @@ function feval(params_)
     return loss, grad_params
 end
 
+feval(params)
+--[[
 -- optimization stuff
 local losses = {}
 local optim_state = {learningRate = 1e-1}
@@ -150,3 +154,4 @@ for i = 1, iterations do
         print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f, gradnorm = %6.4e", i, loss[1], loss[1] / opt.seq_length, grad_params:norm()))
     end
 end
+--]]

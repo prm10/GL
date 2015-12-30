@@ -15,17 +15,18 @@ cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',10,'number of batch')
-cmd:option('-batch_size',20,'number of sequences to train on in parallel')
-cmd:option('-seq_length',2000,'length of sequences to train on in parallel')
-cmd:option('-delay',60,'time delay between targets and label')
+cmd:option('-batch_size',30,'number of sequences to train on in parallel')
+cmd:option('-seq_length',20,'length of sequences to train on in parallel')
+cmd:option('-delay',6,'time delay between targets and label')
 
 cmd:option('-input_size',1,'size of input')
-cmd:option('-rnn_size',20,'size of LSTM internal state')
-cmd:option('-output_size',1,'size of output')
+cmd:option('-rnn_size',5,'size of LSTM internal state')
+cmd:option('-output_size',2,'size of output')
 
 cmd:option('-max_epochs',10,'number of full passes through the training data')
 cmd:option('-save_every',100,'save every 100 steps, overwriting the existing file')
 cmd:option('-print_every',100,'how many steps/minibatches between printing out the loss')
+cmd:option('-savefile','model_autosave','filename to autosave the model (protos) to, appended with the,param,string.t7')
 
 cmd:text()
 
@@ -35,21 +36,26 @@ local opt = cmd:parse(arg)
 -- preparation stuff:
 torch.manualSeed(opt.seed)
 
-local data=data_loader.load_data()
-data:generateBatchData(opt.batches,opt.batch_size,opt.seq_length,opt.delay)
--- x,y=data:getTrainData()
--- -- gnuplot.plot(y[y:eq(0)],x[y:eq(0)])
--- local ind=1
--- x1=x[{ind,{1,-opt.delay-1}}]
--- y1=y[{ind,{opt.delay+1,-1}}]
--- gnuplot.plot({torch.range(1,x1:size(1))[y1:eq(0)],x1[y1:eq(0)],'+'},
--- {torch.range(1,x1:size(1))[y1:eq(1)],x1[y1:eq(1)],'+'})
+local loader=data_loader.load_data()
+loader:generateBatchData(opt.batches,opt.batch_size,opt.seq_length,opt.delay)
+--[[
+x,y=loader:getTrainData()
+-- print('size x:'..#x)
+-- print('size y:'..#y)
+-- gnuplot.plot(y[y:eq(0)],x[y:eq(0)])
+local ind=1
+x1=x[{ind,{1,-opt.delay-1}}]
+y1=y[{ind,{opt.delay+1,-1}}]
+gnuplot.plot({torch.range(1,x1:size(1))[y1:eq(0)],x1[y1:eq(0)],'+'},
+{torch.range(1,x1:size(1))[y1:eq(1)],x1[y1:eq(1)],'+'})
+--]]
 
+--[
 -- define model prototypes for ONE timestep, then clone them
---
 local protos = {}
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
-protos.lstm = LSTM.lstm(opt.input_size,opt.rnn_size)
+-- protos.linear = nn.Sequential():add(nn.Linear(opt.rnn_size, opt.output_size))
+protos.lstm = LSTM.lstm(opt)
 protos.softmax = nn.Sequential():add(nn.Linear(opt.rnn_size, opt.output_size)):add(nn.LogSoftMax())
 protos.criterion = nn.ClassNLLCriterion()
 
@@ -81,20 +87,26 @@ function feval(params_)
 
     ------------------ get minibatch -------------------
     local x, y = loader:getTrainData()
-
     ------------------- forward pass -------------------
     local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
     local lstm_h = {[0]=initstate_h} -- output values of LSTM
     local predictions = {}           -- softmax outputs
     local loss = 0
-
+    print(x[{{}, 1}]:size())
+    print(lstm_c[0]:size())
+    print(lstm_h[0]:size())
     for t=1,opt.seq_length do
+        print('time: '..t)
         -- we're feeding the *correct* things in here, alternatively
         -- we could sample from the previous timestep and embed that, but that's
         -- more commonly done for LSTM encoder-decoder models
-        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[{{}, t}], lstm_c[t-1], lstm_h[t-1]})
-
+        input=torch.zeros(opt.batch_size, opt.input_size):copy(x[{{}, t}])
+        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{input, lstm_c[t-1], lstm_h[t-1]})
         predictions[t] = clones.softmax[t]:forward(lstm_h[t])
+        -- print("predictions[t]")
+        -- print(predictions[t])
+        -- print("y[{{}, t}]")
+        -- print(y[{{}, t}])
         loss = loss + clones.criterion[t]:forward(predictions[t], y[{{}, t}])
     end
 
@@ -138,6 +150,8 @@ function feval(params_)
     return loss, grad_params
 end
 
+feval(params)
+--[[
 -- optimization stuff
 local losses = {}
 local optim_state = {learningRate = 1e-1}
@@ -153,3 +167,4 @@ for i = 1, iterations do
         print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f, gradnorm = %6.4e", i, loss[1], loss[1] / opt.seq_length, grad_params:norm()))
     end
 end
+--]]

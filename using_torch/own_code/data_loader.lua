@@ -46,11 +46,11 @@ function loader:generateBatchData(batches,batch_size,length,delay)
   self.batch_size=batch_size
   self.length=length
   self.delay=delay
-  self.current_batch=1
+  self.current_batch=0
   local n = torch.floor(self.inputs:size(1)*2/3)
-  local step=torch.floor(n/batches/batch_size)
+  local step=torch.floor((n-delay-length)/batches/batch_size)
   local i=0
-  while i<n-delay-length-step*batch_size do
+  while i<=n-delay-length-step*batch_size do
     local trainData1=torch.Tensor(batch_size,length):zero()
     local trainLabel1=torch.Tensor(batch_size,length):zero()
     for j=1,batch_size do
@@ -59,12 +59,22 @@ function loader:generateBatchData(batches,batch_size,length,delay)
       i=i+step
     end
     self.trainData[#self.trainData+1]=trainData1
-    self.trainLabel[#self.trainLabel+1]=trainLabel1
+    self.trainLabel[#self.trainLabel+1]=trainLabel1:add(1)
   end
   self.testData[1]=self.inputs:sub(n+1,self.inputs:size(1))
   local testLabel1=torch.Tensor(self.inputs:size(1)-n):zero()
   testLabel1[{{delay+1,testLabel1:size(1)}}]=self.targets:sub(n+1,self.targets:size(1)-delay)
-  self.testLabel[1]=testLabel1
+  self.testLabel[1]=testLabel1:add(1)
+  print('--------------------------------')
+  print('trainset: '..#self.trainData)
+  print('dataSize: ')
+  print(self.trainData[1]:size())
+  print('targetSize: ')
+  print(self.trainLabel[1]:size())
+  print('testset: '..#self.testData)
+  print('--------------------------------')
+  print('generate data done ')
+  collectgarbage()
 end
 
 function loader:getTrainData()
