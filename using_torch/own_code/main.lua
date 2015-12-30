@@ -23,12 +23,14 @@ cmd:option('-input_size',1,'size of input')
 cmd:option('-rnn_size',20,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
-cmd:option('-max_epochs',10,'number of full passes through the training data')
+cmd:option('-max_epochs',1000,'number of full passes through the training data')
 cmd:option('-save_every',100,'save every 100 steps, overwriting the existing file')
 cmd:option('-print_every',100,'how many steps/minibatches between printing out the loss')
 cmd:option('-savefile','model_autosave','filename to autosave the model (protos) to, appended with the,param,string.t7')
 cmd:option('-vocabfile','vocabfile.t7','filename of the string->int table')
 cmd:option('-datafile','datafile.t7','filename of the serialized torch ByteTensor to load')
+
+cmd:option('-gpuid',0,'which gpu to use. -1 = use CPU')
 cmd:text()
 
 -- parse input params
@@ -37,18 +39,37 @@ local opt = cmd:parse(arg)
 -- preparation stuff:
 torch.manualSeed(opt.seed)
 
+-- 使用GPU
+-- 需要传输到gpu中的数据（3类）：
+-- lstm的c0, h0
+-- data和label：x，y
+-- lstm模型参数
+local ok, cunn = pcall(require, 'cunn')
+local ok2, cutorch = pcall(require, 'cutorch')
+if not ok then print('package cunn not found!') end
+if not ok2 then print('package cutorch not found!') end
+if ok and ok2 then
+    print('using CUDA on GPU ' .. opt.gpuid .. '...')
+    cutorch.setDevice(opt.gpuid + 1) -- note +1 to make it 0 indexed! sigh lua
+    cutorch.manualSeed(opt.seed)
+else
+    print('If cutorch and cunn are installed, your CUDA toolkit may be improperly configured.')
+    print('Check your CUDA toolkit installation, rebuild cutorch and cunn, and try again.')
+    print('Falling back on CPU mode')
+    opt.gpuid = -1 -- overwrite user setting
+end
+
 local loader=data_loader.load_data()
 loader:generateBatchData(opt.batches,opt.batch_size,opt.seq_length,opt.delay)
 --[[
 x,y=loader:getTrainData()
--- print('size x:'..#x)
--- print('size y:'..#y)
--- gnuplot.plot(y[y:eq(0)],x[y:eq(0)])
-local ind=1
-x1=x[{ind,{1,-opt.delay-1}}]
-y1=y[{ind,{opt.delay+1,-1}}]
-gnuplot.plot({torch.range(1,x1:size(1))[y1:eq(0)],x1[y1:eq(0)],'+'},
-{torch.range(1,x1:size(1))[y1:eq(1)],x1[y1:eq(1)],'+'})
+gnuplot.plot({x[1],'+'},{y[1],'+'})
+
+-- local ind=1
+-- x1=x[{ind,{1,-opt.delay-1}}]
+-- y1=y[{ind,{opt.delay+1,-1}}]
+-- gnuplot.plot({torch.range(1,x1:size(1))[y1:eq(0)],x1[y1:eq(0)],'+'},
+-- {torch.range(1,x1:size(1))[y1:eq(1)],x1[y1:eq(1)],'+'})
 --]]
 
 --[
@@ -97,7 +118,8 @@ function feval(params_)
         -- we're feeding the *correct* things in here, alternatively
         -- we could sample from the previous timestep and embed that, but that's
         -- more commonly done for LSTM encoder-decoder models
-        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[{{}, t}]:resize(opt.batch_size, opt.input_size), lstm_c[t-1], lstm_h[t-1]})
+        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[{{},t}]
+        :resize(opt.batch_size,opt.input_size), lstm_c[t-1], lstm_h[t-1]})
         predictions[t] = clones.softmax[t]:forward(lstm_h[t])
         loss = loss + clones.criterion[t]:forward(predictions[t], y[{{}, t}])
     end
