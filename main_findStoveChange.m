@@ -1,16 +1,17 @@
 clc;close all;clear;
-%
+%{
 No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-i1=3;%高炉编号
+i1=2;%高炉编号
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-i2=1;%:length(input0)
+i2=3;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
 
 i0=17;
 hotWindPress=data1(:,i0);
+hotWindPress=smooth(hotWindPress);
 coldWind=data1(:,8);
 [indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
 figure;
@@ -37,14 +38,14 @@ save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
 % subplot(212);
 % plot(hotWindPressLabel(range,:));
 
-%{
+%
 load('fscDataHWP.mat');
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
 train_len=size(dataTrain,1);
 test_len=size(dataTest,1);
-rng(3);
+rng(11);
 lenInput=1000;
 num=50;
 index=floor(rand(num,1)*(train_len-lenInput));
@@ -77,7 +78,7 @@ args_name='args_fsc.mat';
 choice=2;
 switch choice
     case 1%初始化
-        args.maxecho=10;
+        args.maxecho=1;
         args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=1e-5;
@@ -95,7 +96,7 @@ switch choice
         args.circletimes=100;
 %         args.momentum=0.5;
 %         args.learningrate=5e-2;
-        args.batchsize=3;
+%         args.batchsize=3;
         [args]=fsc_train(args);
         save(args_name,'args');
     case 3%梯度检验
@@ -144,8 +145,8 @@ subplot(313);
 plot(predict(delay+1:end,1));
 %}
 
-%%
-load 'args_fsc.mat';
+%{
+load 'args_fsc_No3_1231.mat';
 
 load('fscData.mat');
 label=hotWindPressLabel;

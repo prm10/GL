@@ -4,9 +4,9 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-i1=1;%高炉编号
+i1=2;%高炉编号
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-i2=4;%:length(input0)
+i2=6;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
 
 i0=17;
@@ -24,6 +24,8 @@ hotWindPress=data1(:,i0);
 % sHWP=(hotWindPress-md)./max(sd,0.0001);
 % dHWP=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
 % dHWP=[0;dHWP/std(dHWP)];
+
+hotWindPress=smooth(hotWindPress);
 
 [indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
 %% 人工微调 i1=1; i2=6;

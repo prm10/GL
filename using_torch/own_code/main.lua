@@ -14,9 +14,9 @@ cmd:text()
 cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
-cmd:option('-batches',10,'number of batch')
-cmd:option('-batch_size',20,'number of sequences to train on in parallel')
-cmd:option('-seq_length',2000,'length of sequences to train on in parallel')
+cmd:option('-batches',20,'number of batch')
+cmd:option('-batch_size',10,'number of sequences to train on in parallel')
+cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
 cmd:option('-input_size',1,'size of input')
@@ -168,10 +168,12 @@ end
 --[
 -- optimization stuff
 local losses = {}
-local optim_state = {learningRate = 1e-1}
+-- local optim_state = {learningRate = 1e-1}
+local optim_state = {learningRate=1e-1,momentum=0.9,weightDecay=1e-5}
 local iterations = opt.max_epochs * opt.batches
 for i = 1, iterations do
-    local _, loss = optim.adagrad(feval, params, optim_state)
+    -- local _, loss = optim.adagrad(feval, params, optim_state)
+    local _, loss = optim.sgd(feval, params, optim_state)
     losses[#losses + 1] = loss[1]
 
     if i % opt.save_every == 0 then
@@ -181,4 +183,5 @@ for i = 1, iterations do
         print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f, gradnorm = %6.4e", i, loss[1], loss[1] / opt.seq_length, grad_params:norm()))
     end
 end
+gnuplot.plot(losses)
 --]]

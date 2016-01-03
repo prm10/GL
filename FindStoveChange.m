@@ -13,13 +13,13 @@ dHWP=[0;dHWP/std(dHWP)];
 
 avgLength=338;
 lastChange=0;
-width=40;
+width=60;
 indexChange=false(length(hotWindPress),1);
 while lastChange<length(hotWindPress)-avgLength
     len0=lastChange;
     lastChange=lastChange+avgLength;%下一个可能换炉的地方
     search=[lastChange-floor(avgLength/2),min(lastChange+floor(avgLength/2),length(hotWindPress)-1)];%附近的可能区域
-    least=find(dHWP(search(1):search(2))<-3,1,'first');
+    least=find(dHWP(search(1):search(2))<-2.5,1,'first');
     if isempty(least)
         continue;
     end
@@ -28,7 +28,8 @@ while lastChange<length(hotWindPress)-avgLength
     search(2)=min(search(1)+width,length(hotWindPress)-1);
     [~,highest]=max(dHWP(search(1):search(2)));
     highest=highest+least-1;
-    if dHWP(highest)<2
+    if dHWP(highest)<1.9
+        lastChange=lastChange-floor(avgLength/2);
         continue;
     end
     [~,lastChange]=min(hotWindPress(least:highest));%找到附近最小值
