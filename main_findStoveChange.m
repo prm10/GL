@@ -97,10 +97,10 @@ switch choice
         save(args_name,'args');
     case 2%继续运算
         load(args_name);
-        args.maxecho=100;
+        args.maxecho=10;
         args.circletimes=100;
-%         args.momentum=0.5;
-%         args.learningrate=5e-2;
+        args.momentum=0.9;
+        args.learningrate=5e-2;
 %         args.batchsize=3;
         [args]=fsc_train(args);
         save(args_name,'args');
@@ -130,7 +130,7 @@ switch choice
 end
 
 figure;
-plot((1:length(args.Er))*100,args.Er);
+plot((1:length(args.Er))*100,args.Er,'.');
 title('误差下降曲线');
 xlabel('迭代次数');
 ylabel('误差');

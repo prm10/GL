@@ -8,9 +8,9 @@ i1=2;%高炉编号
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
 i2=6;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
+i3=17;
+hotWindPress=data1(:,i3);
 
-i0=17;
-hotWindPress=data1(:,i0);
 % coldWind=data1(:,8);
 
 % md=zeros(length(hotWindPress),1);
@@ -26,7 +26,6 @@ hotWindPress=data1(:,i0);
 % dHWP=[0;dHWP/std(dHWP)];
 
 hotWindPress=smooth(hotWindPress);
-
 [indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
 %% 人工微调 i1=1; i2=6;
 %{
