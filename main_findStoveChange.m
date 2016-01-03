@@ -9,9 +9,14 @@ load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
 i2=3;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
 
+<<<<<<< HEAD
 i0=17;
 hotWindPress=data1(:,i0);
 hotWindPress=smooth(hotWindPress);
+=======
+i3=17;
+hotWindPress=data1(:,i3);
+>>>>>>> origin/master
 coldWind=data1(:,8);
 [indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
 figure;
