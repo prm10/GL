@@ -3,9 +3,8 @@ require 'nn'
 require 'nngraph'
 require 'optim'
 require 'gnuplot'
-
 local data_loader = require "data_loader"
-local LSTM = require 'LSTM'             -- LSTM timestep and utilities
+local LSTM = require 'LSTM'
 local model_utils=require 'model_utils'
 
 local cmd = torch.CmdLine()
@@ -16,7 +15,7 @@ cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',20,'number of batch')
-cmd:option('-batch_size',5,'number of sequences to train on in parallel')
+cmd:option('-batch_size',10,'number of sequences to train on in parallel')
 cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
@@ -78,9 +77,6 @@ gnuplot.plot({x[1],'+'},{y[1],'+'})
 local create_model = require 'create_model'
 local protos = create_model(opt)
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
-protos.lstm = LSTM.lstm(opt.input_size,opt.rnn_size)
-protos.softmax = nn.Sequential():add(nn.Linear(opt.rnn_size, opt.output_size)):add(nn.LogSoftMax())
-protos.criterion = nn.ClassNLLCriterion()
 
 -- put the above things into one flattened parameters tensor
 local params, grad_params = model_utils.combine_all_parameters(protos.lstm, protos.softmax)
@@ -109,7 +105,9 @@ function feval(params_)
     grad_params:zero()
 
     ------------------ get minibatch -------------------
-    local x, y = loader:getTrainData()
+    local x0, y0 = loader:getTrainData()
+    x=x0[{ind,{1,-opt.delay-1}}]
+    y=y0[{ind,{opt.delay+1,-1}}]
     ------------------- forward pass -------------------
     local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
     local lstm_h = {[0]=initstate_h} -- output values of LSTM
@@ -169,12 +167,12 @@ end
 --[
 -- optimization stuff
 local losses = {}
--- local optim_state = {learningRate = 1e-1}
-local optim_state = {learningRate=1e-1,momentum=0.9,weightDecay=1e-5}
+local optim_state = {learningRate = 1e-1}
+-- local optim_state = {learningRate=1e-1,momentum=0.9,weightDecay=1e-5}
 local iterations = opt.max_epochs * opt.batches
 for i = 1, iterations do
-    -- local _, loss = optim.adagrad(feval, params, optim_state)
-    local _, loss = optim.sgd(feval, params, optim_state)
+    local _, loss = optim.adagrad(feval, params, optim_state)
+    -- local _, loss = optim.sgd(feval, params, optim_state)
     losses[#losses + 1] = loss[1]
 
     if i % opt.save_every == 0 then
@@ -184,5 +182,5 @@ for i = 1, iterations do
         print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f, gradnorm = %6.4e", i, loss[1], loss[1] / opt.seq_length, grad_params:norm()))
     end
 end
-gnuplot.plot(losses)
+gnuplot.plot(torch.Tensor(losses))
 --]]

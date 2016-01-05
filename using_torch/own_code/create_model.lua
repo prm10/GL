@@ -1,6 +1,7 @@
+require 'torch'
 require 'nn'
-require 'requ'
-
+require 'nngraph'
+local LSTM = require 'LSTM'
 function create_model(opt)
   ------------------------------------------------------------------------------
   -- MODEL

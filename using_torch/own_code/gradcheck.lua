@@ -1,8 +1,12 @@
+require 'torch'
+require 'nn'
+require 'nngraph'
+local LSTM = require 'LSTM'
+local model_utils=require 'model_utils'
 local create_model = require 'create_model'
 
 --------------------------------------------------------------
 -- SETTINGS
-local opt = { nonlinearity_type = 'requ' }
 
 -- function that numerically checks gradient of the loss:
 -- f is the scalar-valued function
@@ -10,6 +14,7 @@ local opt = { nonlinearity_type = 'requ' }
 -- returns difference, true gradient, and estimated gradient
 local function checkgrad(f, g, x, eps)
   -- compute true gradient
+  f(x)
   local grad = g(x)
 
   -- compute numeric approximations to gradient
@@ -29,10 +34,10 @@ local function checkgrad(f, g, x, eps)
   return diff, grad, grad_est
 end
 
-function fakedata(n)
+function fakedata(opt)
     local data = {}
-    data.inputs = torch.randn(n, 4)                     -- random standard normal distribution for inputs
-    data.targets = torch.rand(n):mul(3):add(1):floor()  -- random integers from {1,2,3}
+    data.inputs = torch.randn(opt.batch_size, opt.seq_length, opt.input_size)                     -- random standard normal distribution for inputs
+    data.targets = torch.rand(opt.batch_size,opt.seq_length):add(1):floor()  -- random integers from {1,2,3}
     return data
 end
 
@@ -41,13 +46,13 @@ end
 --
 opt={
   input_size=1,
-  rnn_size=20,
+  rnn_size=5,
   output_size=2,
   seq_length=10,
   batch_size=20,
 }
 torch.manualSeed(1)
-local data = fakedata(5)
+local data = fakedata(opt)
 
 local protos = create_model(opt)
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
@@ -71,6 +76,10 @@ local initstate_h = initstate_c:clone()
 local dfinalstate_c = initstate_c:clone()
 local dfinalstate_h = initstate_c:clone()
 
+local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
+local lstm_h = {[0]=initstate_h} -- output values of LSTM
+local predictions = {}           -- softmax outputs
+
 
 -- returns loss(params)
 local f = function(x)
@@ -79,9 +88,6 @@ local f = function(x)
   end
   -- return criterion:forward(model:forward(data.inputs), data.targets)
 
-  local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
-  local lstm_h = {[0]=initstate_h} -- output values of LSTM
-  local predictions = {}           -- softmax outputs
   local loss = 0
   for t=1,opt.seq_length do
       -- we're feeding the *correct* things in here, alternatively
@@ -125,7 +131,8 @@ local g = function(x)
 
       -- backprop through LSTM timestep
       dx[t], dlstm_c[t-1], dlstm_h[t-1] = unpack(clones.lstm[t]:backward(
-          {data.inputs[{{}, t}], lstm_c[t-1], lstm_h[t-1]},--x,c0,h0
+          {data.inputs[{{},t}]
+          :resize(opt.batch_size,opt.input_size), lstm_c[t-1], lstm_h[t-1]},--x,c0,h0
           {dlstm_c[t], dlstm_h[t]}
       ))
 
@@ -135,6 +142,7 @@ local g = function(x)
 
   return grad_params
 end
+
 
 local diff = checkgrad(f, g, params)
 print(diff)
