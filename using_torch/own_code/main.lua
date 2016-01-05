@@ -3,6 +3,7 @@ require 'nn'
 require 'nngraph'
 require 'optim'
 require 'gnuplot'
+
 local data_loader = require "data_loader"
 local LSTM = require 'LSTM'             -- LSTM timestep and utilities
 local model_utils=require 'model_utils'
@@ -15,7 +16,7 @@ cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',20,'number of batch')
-cmd:option('-batch_size',10,'number of sequences to train on in parallel')
+cmd:option('-batch_size',5,'number of sequences to train on in parallel')
 cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
@@ -23,7 +24,7 @@ cmd:option('-input_size',1,'size of input')
 cmd:option('-rnn_size',20,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
-cmd:option('-max_epochs',1000,'number of full passes through the training data')
+cmd:option('-max_epochs',100,'number of full passes through the training data')
 cmd:option('-save_every',100,'save every 100 steps, overwriting the existing file')
 cmd:option('-print_every',100,'how many steps/minibatches between printing out the loss')
 cmd:option('-savefile','model_autosave','filename to autosave the model (protos) to, appended with the,param,string.t7')
@@ -74,10 +75,10 @@ gnuplot.plot({x[1],'+'},{y[1],'+'})
 
 --[
 -- define model prototypes for ONE timestep, then clone them
-local protos = {}
+local create_model = require 'create_model'
+local protos = create_model(opt)
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
--- protos.linear = nn.Sequential():add(nn.Linear(opt.rnn_size, opt.output_size))
-protos.lstm = LSTM.lstm(opt)
+protos.lstm = LSTM.lstm(opt.input_size,opt.rnn_size)
 protos.softmax = nn.Sequential():add(nn.Linear(opt.rnn_size, opt.output_size)):add(nn.LogSoftMax())
 protos.criterion = nn.ClassNLLCriterion()
 

@@ -3,16 +3,16 @@
 local LSTM = {}
 
 -- Creates one timestep of one LSTM
-function LSTM.lstm(opt)
+function LSTM.lstm(input_size,rnn_size)
     local x = nn.Identity()()
     local prev_c = nn.Identity()()
     local prev_h = nn.Identity()()
 
     function new_input_sum()
         -- transforms input
-        local i2h            = nn.Linear(opt.input_size, opt.rnn_size)(x)--默认输入size与lstm的一样了？！
+        local i2h            = nn.Linear(input_size, rnn_size)(x)--默认输入size与lstm的一样了？！
         -- transforms previous timestep's output
-        local h2h            = nn.Linear(opt.rnn_size, opt.rnn_size)(prev_h)
+        local h2h            = nn.Linear(rnn_size, rnn_size)(prev_h)
         return nn.CAddTable()({i2h, h2h})
     end
 
