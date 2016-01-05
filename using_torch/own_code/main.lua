@@ -23,7 +23,7 @@ cmd:option('-input_size',1,'size of input')
 cmd:option('-rnn_size',20,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
-cmd:option('-max_epochs',100,'number of full passes through the training data')
+cmd:option('-max_epochs',500,'number of full passes through the training data')
 cmd:option('-save_every',100,'save every 100 steps, overwriting the existing file')
 cmd:option('-print_every',100,'how many steps/minibatches between printing out the loss')
 cmd:option('-savefile','model_autosave','filename to autosave the model (protos) to, appended with the,param,string.t7')
@@ -158,7 +158,7 @@ function feval(params_)
     -- initstate_h:copy(lstm_h[#lstm_h])
 
     -- clip gradient element-wise
-    grad_params:clamp(-5, 5)
+    grad_params:clamp(-15, 15)
 
     return loss, grad_params
 end
