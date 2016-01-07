@@ -15,12 +15,12 @@ cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',20,'number of batch')
-cmd:option('-batch_size',10,'number of sequences to train on in parallel')
+cmd:option('-batch_size',3,'number of sequences to train on in parallel')
 cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
 cmd:option('-input_size',1,'size of input')
-cmd:option('-rnn_size',20,'size of LSTM internal state')
+cmd:option('-rnn_size',10,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
 cmd:option('-max_epochs',500,'number of full passes through the training data')
@@ -31,6 +31,7 @@ cmd:option('-vocabfile','vocabfile.t7','filename of the string->int table')
 cmd:option('-datafile','datafile.t7','filename of the serialized torch ByteTensor to load')
 
 cmd:option('-gpuid',0,'which gpu to use. -1 = use CPU')
+cmd:option('-loadfile','model_autosave','filename to load the model (protos)')
 cmd:text()
 
 -- parse input params
@@ -75,13 +76,23 @@ gnuplot.plot({x[1],'+'},{y[1],'+'})
 --[
 -- define model prototypes for ONE timestep, then clone them
 local create_model = require 'create_model'
-local protos = create_model(opt)
+local protos
+-- print("load file"..opt.loadfile)
+if opt.loadfile~=nil then
+  print("load file"..opt.loadfile)
+  protos = torch.load(opt.loadfile)
+else
+  print("create model!")
+  protos = create_model(opt)
+end
+
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
 
 -- put the above things into one flattened parameters tensor
 local params, grad_params = model_utils.combine_all_parameters(protos.lstm, protos.softmax)
-params:uniform(-0.08, 0.08)
-
+if opt.loadfile==nil then
+  params:uniform(-0.08, 0.08)
+end
 -- make a bunch of clones, AFTER flattening, as that reallocates memory
 local clones = {}
 for name,proto in pairs(protos) do
@@ -105,9 +116,7 @@ function feval(params_)
     grad_params:zero()
 
     ------------------ get minibatch -------------------
-    local x0, y0 = loader:getTrainData()
-    x=x0[{ind,{1,-opt.delay-1}}]
-    y=y0[{ind,{opt.delay+1,-1}}]
+    local x, y = loader:getTrainData()
     ------------------- forward pass -------------------
     local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
     local lstm_h = {[0]=initstate_h} -- output values of LSTM
@@ -167,12 +176,12 @@ end
 --[
 -- optimization stuff
 local losses = {}
-local optim_state = {learningRate = 1e-1}
--- local optim_state = {learningRate=1e-1,momentum=0.9,weightDecay=1e-5}
+-- local optim_state = {learningRate = 1e-1}
+local optim_state = {learningRate=1e-3,momentum=0.9,weightDecay=1e-6}
 local iterations = opt.max_epochs * opt.batches
 for i = 1, iterations do
-    local _, loss = optim.adagrad(feval, params, optim_state)
-    -- local _, loss = optim.sgd(feval, params, optim_state)
+    -- local _, loss = optim.adagrad(feval, params, optim_state)
+    local _, loss = optim.sgd(feval, params, optim_state)
     losses[#losses + 1] = loss[1]
 
     if i % opt.save_every == 0 then
