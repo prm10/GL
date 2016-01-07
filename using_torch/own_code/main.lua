@@ -15,7 +15,7 @@ cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',20,'number of batch')
-cmd:option('-batch_size',3,'number of sequences to train on in parallel')
+cmd:option('-batch_size',5,'number of sequences to train on in parallel')
 cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
@@ -177,7 +177,7 @@ end
 -- optimization stuff
 local losses = {}
 -- local optim_state = {learningRate = 1e-1}
-local optim_state = {learningRate=1e-3,momentum=0.9,weightDecay=1e-6}
+local optim_state = {learningRate=1e-4,momentum=0.9,weightDecay=0}
 local iterations = opt.max_epochs * opt.batches
 for i = 1, iterations do
     -- local _, loss = optim.adagrad(feval, params, optim_state)
