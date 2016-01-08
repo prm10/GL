@@ -16,7 +16,7 @@ cmd:text('Options')
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',20,'number of batch')
 cmd:option('-batch_size',5,'number of sequences to train on in parallel')
-cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
+cmd:option('-seq_length',100,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
 cmd:option('-input_size',1,'size of input')
@@ -30,8 +30,8 @@ cmd:option('-savefile','model_autosave','filename to autosave the model (protos)
 cmd:option('-vocabfile','vocabfile.t7','filename of the string->int table')
 cmd:option('-datafile','datafile.t7','filename of the serialized torch ByteTensor to load')
 
-cmd:option('-gpuid',0,'which gpu to use. -1 = use CPU')
-cmd:option('-loadfile','model_autosave','filename to load the model (protos)')
+cmd:option('-gpuid',-1,'which gpu to use. -1 = use CPU')
+-- cmd:option('-loadfile','model_autosave','filename to load the model (protos)')
 cmd:text()
 
 -- parse input params
@@ -49,7 +49,7 @@ local ok, cunn = pcall(require, 'cunn')
 local ok2, cutorch = pcall(require, 'cutorch')
 if not ok then print('package cunn not found!') end
 if not ok2 then print('package cutorch not found!') end
-if ok and ok2 then
+if ok and ok2 and opt.gpuid >=0 then
     print('using CUDA on GPU ' .. opt.gpuid .. '...')
     cutorch.setDevice(opt.gpuid + 1) -- note +1 to make it 0 indexed! sigh lua
     cutorch.manualSeed(opt.seed)
@@ -86,6 +86,11 @@ else
   protos = create_model(opt)
 end
 
+-- ship the model to the GPU if desired
+if opt.gpuid >= 0 then
+    for k,v in pairs(protos) do v:cuda() end
+end
+
 -- lstm timestep's input: {x, prev_c, prev_h}, output: {next_c, next_h}
 
 -- put the above things into one flattened parameters tensor
@@ -108,6 +113,24 @@ local initstate_h = initstate_c:clone()
 local dfinalstate_c = initstate_c:clone()
 local dfinalstate_h = initstate_c:clone()
 
+if opt.gpuid >= 0 then
+    initstate_c:cuda()
+    initstate_h:cuda()
+    dfinalstate_c:cuda()
+    dfinalstate_h:cuda()
+end
+-- preprocessing helper function
+function prepro(x,y)
+    x = x:contiguous() -- swap the axes for faster indexing
+    y = y:contiguous()
+    if opt.gpuid >= 0 then -- ship the input arrays to GPU
+        -- have to convert to float because integers can't be cuda()'d
+        x = x:float():cuda()
+        y = y:float():cuda()
+    end
+    return x,y
+end
+
 -- do fwd/bwd and return loss, grad_params
 function feval(params_)
     if params_ ~= params then
@@ -117,6 +140,7 @@ function feval(params_)
 
     ------------------ get minibatch -------------------
     local x, y = loader:getTrainData()
+    x,y = prepro(x,y)
     ------------------- forward pass -------------------
     local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
     local lstm_h = {[0]=initstate_h} -- output values of LSTM

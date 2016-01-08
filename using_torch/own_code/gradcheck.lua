@@ -48,7 +48,7 @@ opt={
   input_size=1,
   rnn_size=5,
   output_size=2,
-  seq_length=10,
+  seq_length=1000,
   batch_size=20,
 }
 torch.manualSeed(1)
