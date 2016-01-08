@@ -14,8 +14,8 @@ cmd:text()
 cmd:text('Options')
 
 cmd:option('-seed',13,'seed')
-cmd:option('-batches',20,'number of batch')
-cmd:option('-batch_size',5,'number of sequences to train on in parallel')
+cmd:option('-batches',10,'number of batch')
+cmd:option('-batch_size',50,'number of sequences to train on in parallel')
 cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
@@ -23,15 +23,15 @@ cmd:option('-input_size',1,'size of input')
 cmd:option('-rnn_size',20,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
-cmd:option('-max_epochs',500,'number of full passes through the training data')
-cmd:option('-save_every',100,'save every 100 steps, overwriting the existing file')
-cmd:option('-print_every',100,'how many steps/minibatches between printing out the loss')
+cmd:option('-max_epochs',1,'number of full passes through the training data')
+cmd:option('-save_every',10,'save every 100 steps, overwriting the existing file')
+cmd:option('-print_every',10,'how many steps/minibatches between printing out the loss')
 cmd:option('-savefile','model_autosave','filename to autosave the model (protos) to, appended with the,param,string.t7')
 cmd:option('-vocabfile','vocabfile.t7','filename of the string->int table')
 cmd:option('-datafile','datafile.t7','filename of the serialized torch ByteTensor to load')
 
 cmd:option('-gpuid',0,'which gpu to use. -1 = use CPU')
--- cmd:option('-loadfile','model_autosave','filename to load the model (protos)')
+cmd:option('-loadfile','model_autosave','filename to load the model (protos)')
 cmd:text()
 
 -- parse input params
@@ -214,5 +214,24 @@ for i = 1, iterations do
         print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f, gradnorm = %6.4e", i, loss[1], loss[1] / opt.seq_length, grad_params:norm()))
     end
 end
-gnuplot.plot(torch.Tensor(losses))
+
 --]]
+local x, y = loader:getTrainData()
+x,y = x[1],y[1]
+------------------- forward pass -------------------
+local lstm_c = {[0]=torch.zeros(1, opt.rnn_size)} -- internal cell states of LSTM
+local lstm_h = {[0]=torch.zeros(1, opt.rnn_size)} -- output values of LSTM
+local predictions = {}           -- softmax outputs
+local loss = 0
+for t=1,opt.seq_length do
+    -- we're feeding the *correct* things in here, alternatively
+    -- we could sample from the previous timestep and embed that, but that's
+    -- more commonly done for LSTM encoder-decoder models
+    lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[t], lstm_c[t-1], lstm_h[t-1]})
+    -- print(lstm_h[t])
+    predictions[t] = clones.softmax[t]:forward(lstm_h[t])
+    loss = loss + clones.criterion[t]:forward(predictions[t], y[t])
+end
+
+gnuplot.plot(torch.Tensor(losses))
+gnuplot.plot({y},{predictions})
