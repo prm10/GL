@@ -16,11 +16,11 @@ cmd:text('Options')
 cmd:option('-seed',13,'seed')
 cmd:option('-batches',20,'number of batch')
 cmd:option('-batch_size',5,'number of sequences to train on in parallel')
-cmd:option('-seq_length',100,'length of sequences to train on in parallel')
+cmd:option('-seq_length',1000,'length of sequences to train on in parallel')
 cmd:option('-delay',60,'time delay between targets and label')
 
 cmd:option('-input_size',1,'size of input')
-cmd:option('-rnn_size',10,'size of LSTM internal state')
+cmd:option('-rnn_size',20,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
 cmd:option('-max_epochs',500,'number of full passes through the training data')
@@ -30,7 +30,7 @@ cmd:option('-savefile','model_autosave','filename to autosave the model (protos)
 cmd:option('-vocabfile','vocabfile.t7','filename of the string->int table')
 cmd:option('-datafile','datafile.t7','filename of the serialized torch ByteTensor to load')
 
-cmd:option('-gpuid',-1,'which gpu to use. -1 = use CPU')
+cmd:option('-gpuid',0,'which gpu to use. -1 = use CPU')
 -- cmd:option('-loadfile','model_autosave','filename to load the model (protos)')
 cmd:text()
 
@@ -76,7 +76,6 @@ gnuplot.plot({x[1],'+'},{y[1],'+'})
 --[
 -- define model prototypes for ONE timestep, then clone them
 local create_model = require 'create_model'
-local protos
 -- print("load file"..opt.loadfile)
 if opt.loadfile~=nil then
   print("load file"..opt.loadfile)
@@ -114,15 +113,15 @@ local dfinalstate_c = initstate_c:clone()
 local dfinalstate_h = initstate_c:clone()
 
 if opt.gpuid >= 0 then
-    initstate_c:cuda()
-    initstate_h:cuda()
-    dfinalstate_c:cuda()
-    dfinalstate_h:cuda()
+    initstate_c=initstate_c:cuda()
+    initstate_h=initstate_h:cuda()
+    dfinalstate_c=dfinalstate_c:cuda()
+    dfinalstate_h=dfinalstate_h:cuda()
 end
 -- preprocessing helper function
 function prepro(x,y)
-    x = x:contiguous() -- swap the axes for faster indexing
-    y = y:contiguous()
+    x = x:transpose(1,2):contiguous() -- swap the axes for faster indexing
+    y = y:transpose(1,2):contiguous()
     if opt.gpuid >= 0 then -- ship the input arrays to GPU
         -- have to convert to float because integers can't be cuda()'d
         x = x:float():cuda()
@@ -150,10 +149,11 @@ function feval(params_)
         -- we're feeding the *correct* things in here, alternatively
         -- we could sample from the previous timestep and embed that, but that's
         -- more commonly done for LSTM encoder-decoder models
-        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[{{},t}]
+        lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[t]
         :resize(opt.batch_size,opt.input_size), lstm_c[t-1], lstm_h[t-1]})
+        -- print(lstm_h[t])
         predictions[t] = clones.softmax[t]:forward(lstm_h[t])
-        loss = loss + clones.criterion[t]:forward(predictions[t], y[{{}, t}])
+        loss = loss + clones.criterion[t]:forward(predictions[t], y[t])
     end
 
     ------------------ backward pass -------------------
@@ -163,7 +163,7 @@ function feval(params_)
     local dlstm_h = {}                                  -- output values of LSTM
     for t=opt.seq_length,1,-1 do
         -- backprop through loss, and softmax/linear
-        local doutput_t = clones.criterion[t]:backward(predictions[t], y[{{}, t}])
+        local doutput_t = clones.criterion[t]:backward(predictions[t], y[t])
         -- Two cases for dloss/dh_t:
         --   1. h_T is only used once, sent to the softmax (but not to the next LSTM timestep).
         --   2. h_t is used twice, for the softmax and for the next step. To obey the
@@ -177,7 +177,7 @@ function feval(params_)
 
         -- backprop through LSTM timestep
         dx[t], dlstm_c[t-1], dlstm_h[t-1] = unpack(clones.lstm[t]:backward(
-            {x[{{}, t}], lstm_c[t-1], lstm_h[t-1]},--x,c0,h0
+            {x[t], lstm_c[t-1], lstm_h[t-1]},--x,c0,h0
             {dlstm_c[t], dlstm_h[t]}
         ))
 
@@ -196,7 +196,6 @@ function feval(params_)
     return loss, grad_params
 end
 
--- feval(params)
 --[
 -- optimization stuff
 local losses = {}
