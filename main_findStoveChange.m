@@ -6,18 +6,14 @@ ipt=[1;8;13;17;20;24];
 plotvariable;
 i1=2;%¸ßÂ¯±àºÅ
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-i2=3;%:length(input0)
+i2=6;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
 
-<<<<<<< HEAD
-i0=17;
-hotWindPress=data1(:,i0);
-hotWindPress=smooth(hotWindPress);
-=======
 i3=17;
 hotWindPress=data1(:,i3);
->>>>>>> origin/master
-coldWind=data1(:,8);
+hotWindPress=smooth(hotWindPress);
+
+% coldWind=data1(:,8);
 [indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
 figure;
 subplot(311);
@@ -43,7 +39,7 @@ save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
 % subplot(212);
 % plot(hotWindPressLabel(range,:));
 
-%
+%{
 load('fscDataHWP.mat');
 global train_data train_label test_data test_label;
 train_data=cell(0);
@@ -150,12 +146,14 @@ subplot(313);
 plot(predict(delay+1:end,1));
 %}
 
-%{
+%
 load 'args_fsc_No3_1231.mat';
-
 load('fscData.mat');
+
 label=hotWindPressLabel;
+tic
 [predict,Er]=fsc_ff({dHWP},{[hotWindPressLabel,~hotWindPressLabel]},args);
+toc
 data=hotWindPress(1:end-delay,1);
 range1=hotWindPressLabel(delay+1:end,1);
 

@@ -25,9 +25,9 @@ function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff1(input_x11,input_c0,input_x
                 otherwise
                     output(t,:)=tanh(z_k2);
             end
-            if mod(t,ceil(T/100))==0
-                disp(strcat(num2str(t/T*100,2),'%'));
-            end
+%             if mod(t,ceil(T/100))==0
+%                 disp(strcat(num2str(t/T*100,2),'%'));
+%             end
         end
     else%½âÂë»òÔ¤²â,input_xCÎªC1
         inputX0(1,:)=input_x11;%[C1,zeros(1,size(input,2))];
