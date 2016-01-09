@@ -39,7 +39,7 @@ save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
 % subplot(212);
 % plot(hotWindPressLabel(range,:));
 
-%{
+%
 load('fscDataHWP.mat');
 global train_data train_label test_data test_label;
 train_data=cell(0);
@@ -48,7 +48,7 @@ train_len=size(dataTrain,1);
 test_len=size(dataTest,1);
 rng(11);
 lenInput=1000;
-num=50;
+num=1;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
@@ -76,7 +76,7 @@ end
 
 % 参数设置
 args_name='args_fsc.mat';
-choice=2;
+choice=3;
 switch choice
     case 1%初始化
         args.maxecho=1;
@@ -107,7 +107,7 @@ switch choice
         args.momentum=0;
         args.learningrate=0;
         [args]=fsc_train(args);%计算下当前的梯度
-        vname='args.Weight{1, 1}.w_i';
+        vname='args.Weight{1, 1}.p_i';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,'(1,1);');
         eval(s1);
@@ -122,11 +122,11 @@ switch choice
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)-2*error_delta;
         [~,error2]=fsc_ff(train_data,train_label,args);
         dreal=(error1-error2)/error_delta/2;
-        accuracy=abs((dcal-dreal)/dreal)*100;
+        accuracy=abs((dcal-dreal)/dreal);
 end
 
 figure;
-plot((1:length(args.Er))*100,args.Er,'.');
+plot((1:length(args.Er))*100,args.Er);
 title('误差下降曲线');
 xlabel('迭代次数');
 ylabel('误差');
@@ -146,7 +146,7 @@ subplot(313);
 plot(predict(delay+1:end,1));
 %}
 
-%
+%{
 load 'args_fsc_No3_1231.mat';
 load('fscData.mat');
 

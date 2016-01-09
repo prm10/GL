@@ -1,10 +1,4 @@
-% function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff_fast(input_x11,input_c0,input_xC,Weight,T,outputLayer)
-function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff_fast(x1,c0,outputLayer,...
-    w_i,r_i,p_i,...
-    w_f,r_f,p_f,...
-    w_z,r_z,...
-    w_o,r_o,p_o,...
-    w_k,b_k)
+function [x2,in2,f2,z2,c2,o2,y2]=LSTM_step_ff_fast(x1,c0,W)
 %{
 假设为一层的LSTM
 输入参数：
@@ -16,6 +10,19 @@ function [x2,in2,f2,z2,c2,o2,y2,output]=LSTM_step_ff_fast(x1,c0,outputLayer,...
 输出参数：
     x2,in2,f2,z2,c2,o2,y2,output
 %}
+
+w_i=W.w_i;
+r_i=W.r_i;
+p_i=W.p_i;
+w_f=W.w_f;
+r_f=W.r_f;
+p_f=W.p_f;
+w_z=W.w_z;
+r_z=W.r_z;
+w_o=W.w_o;
+r_o=W.r_o;
+p_o=W.p_o;
+
 %% data
 T=size(x1,1);
 N=size(w_i,2);
@@ -65,15 +72,5 @@ for t=2:T
     y2(t,:)=o2(t,:).*tanh(c2(t,:));
 end
 
-%最后一层
-z_k2=y2*w_k+ones(T,1)*b_k;
-numClass=size(w_k,2);
-switch outputLayer
-    case{'softmax'}
-        temp=exp(z_k2-max(z_k2,[],2)*ones(1,numClass));
-        output=temp./(sum(temp,2)*ones(1,numClass));
-    otherwise
-        output=tanh(z_k2);
-end
 function y=sigmoid(x)
     y=1./(1+exp(-x));
