@@ -76,7 +76,7 @@ end
 
 % 参数设置
 args_name='args_fsc.mat';
-choice=3;
+choice=1;
 switch choice
     case 1%初始化
         args.maxecho=1;
@@ -85,7 +85,7 @@ switch choice
         args.weightDecay=1e-5;
         args.learningrate=1e-1;
         args.batchsize=3;
-        args.layer=[1,20,2];
+        args.layer=[1,20,10,2];
         args.Er=[];
         args.outputLayer='softmax';
         args=fsc_initial(args);
@@ -93,10 +93,10 @@ switch choice
         save(args_name,'args');
     case 2%继续运算
         load(args_name);
-        args.maxecho=10;
+        args.maxecho=100;
         args.circletimes=100;
-        args.momentum=0.9;
-        args.learningrate=5e-2;
+%         args.momentum=0.9;
+%         args.learningrate=5e-2;
 %         args.batchsize=3;
         [args]=fsc_train(args);
         save(args_name,'args');
@@ -107,7 +107,7 @@ switch choice
         args.momentum=0;
         args.learningrate=0;
         [args]=fsc_train(args);%计算下当前的梯度
-        vname='args.Weight{1, 1}.p_i';
+        vname='args.Weight{2, 1}.w_i';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,'(1,1);');
         eval(s1);

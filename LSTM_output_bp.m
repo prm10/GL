@@ -7,5 +7,4 @@ switch outputLayer
 end
 dw_k=y2_end'*delta_k;
 db_k=sum(delta_k);
-% w_k=args.Weight{end}.w_k;
 delta_down=delta_k*w_k';

@@ -1,7 +1,4 @@
 function output=LSTM_output_ff(outputLayer,w_k,b_k,y2)
-% outputLayer=args.outputLayer;
-% w_k=W{end}.w_k;
-% b_k=W{end}.b_k;
 %×îºóÒ»²ã
 T=size(y2,1);
 z_k2=y2*w_k+ones(T,1)*b_k;

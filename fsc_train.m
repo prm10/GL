@@ -17,7 +17,7 @@ function [args]=fsc_train(args)
         end
        %% Í³¼ÆÎó²î
         [~,error]=fsc_ff(test_data,test_label,args);
-        fprintf('echo: %d \t test error: %.4f\n',i1,1e4*error);
+        fprintf('echo: %d \t test error: %.4f\n',i1,error);
         args.Er=[args.Er;error];
     end
     close(h);
