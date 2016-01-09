@@ -23,9 +23,8 @@ cmd:option('-input_size',1,'size of input')
 cmd:option('-rnn_size',20,'size of LSTM internal state')
 cmd:option('-output_size',2,'size of output')
 
-cmd:option('-max_epochs',1,'number of full passes through the training data')
-cmd:option('-save_every',10,'save every 100 steps, overwriting the existing file')
-cmd:option('-print_every',10,'how many steps/minibatches between printing out the loss')
+cmd:option('-max_epochs',100,'number of full passes through the training data')
+cmd:option('-save_every',50,'save every 100 steps, overwriting the existing file')
 cmd:option('-savefile','model_autosave','filename to autosave the model (protos) to, appended with the,param,string.t7')
 cmd:option('-vocabfile','vocabfile.t7','filename of the string->int table')
 cmd:option('-datafile','datafile.t7','filename of the serialized torch ByteTensor to load')
@@ -138,12 +137,12 @@ function feval(params_)
     grad_params:zero()
 
     ------------------ get minibatch -------------------
-    local x, y = loader:getTrainData()
+    x, y = loader:getTrainData()
     x,y = prepro(x,y)
     ------------------- forward pass -------------------
     local lstm_c = {[0]=initstate_c} -- internal cell states of LSTM
     local lstm_h = {[0]=initstate_h} -- output values of LSTM
-    local predictions = {}           -- softmax outputs
+    predictions = {}           -- softmax outputs
     local loss = 0
     for t=1,opt.seq_length do
         -- we're feeding the *correct* things in here, alternatively
@@ -202,36 +201,35 @@ local losses = {}
 -- local optim_state = {learningRate = 1e-1}
 local optim_state = {learningRate=1e-4,momentum=0.9,weightDecay=0}
 local iterations = opt.max_epochs * opt.batches
+local time = 0
 for i = 1, iterations do
     -- local _, loss = optim.adagrad(feval, params, optim_state)
+    local timer = torch.Timer()
     local _, loss = optim.sgd(feval, params, optim_state)
     losses[#losses + 1] = loss[1]
-
+    time = time + timer:time().real
     if i % opt.save_every == 0 then
         torch.save(opt.savefile, protos)
-    end
-    if i % opt.print_every == 0 then
-        print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f, gradnorm = %6.4e", i, loss[1], loss[1] / opt.seq_length, grad_params:norm()))
+        print(string.format("iteration %4d, loss = %6.8f, loss/seq_len = %6.8f,gradnorm = %6.4e, time = %6.4f", i, loss[1], loss[1] / opt.seq_length,grad_params:norm(),time))
+        time=0
     end
 end
 
 --]]
-local x, y = loader:getTrainData()
-x,y = x[1],y[1]
-------------------- forward pass -------------------
-local lstm_c = {[0]=torch.zeros(1, opt.rnn_size)} -- internal cell states of LSTM
-local lstm_h = {[0]=torch.zeros(1, opt.rnn_size)} -- output values of LSTM
-local predictions = {}           -- softmax outputs
-local loss = 0
-for t=1,opt.seq_length do
-    -- we're feeding the *correct* things in here, alternatively
-    -- we could sample from the previous timestep and embed that, but that's
-    -- more commonly done for LSTM encoder-decoder models
-    lstm_c[t], lstm_h[t] = unpack(clones.lstm[t]:forward{x[t], lstm_c[t-1], lstm_h[t-1]})
-    -- print(lstm_h[t])
-    predictions[t] = clones.softmax[t]:forward(lstm_h[t])
-    loss = loss + clones.criterion[t]:forward(predictions[t], y[t])
+
+-- print(predictions[1]:exp()[{1,2}]/(predictions[1]:exp()[{1,1}]+predictions[1]:exp()[{1,2}]))
+local index=1
+local predict=torch.Tensor(opt.seq_length)
+if opt.gpuid >= 0 then
+    predict = predict:cuda()
+end
+for i=1,opt.seq_length do
+  predict[i]=predictions[i]:exp()[{index,2}]/(predictions[i]:exp()[{index,1}]+predictions[i]:exp()[{index,2}])
 end
 
+gnuplot.figure()
 gnuplot.plot(torch.Tensor(losses))
-gnuplot.plot({y},{predictions})
+gnuplot.xlabel("迭代次数")
+gnuplot.ylabel("误差")
+gnuplot.figure()
+gnuplot.plot({y[{{},{index}}]:float():add(-1)},{predict})
