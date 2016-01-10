@@ -5,7 +5,6 @@ GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
 i1=2;%¸ßÂ¯±àºÅ
-load 'args_fsc_No3_0103.mat';
 delay=60;
 
 load(strcat('K:\GL_data\',num2str(No(i1)),'\data.mat'));
@@ -13,30 +12,37 @@ data1=data0(:,commenDim{GL(i1)});
 i3=17;
 hotWindPress=data1(:,i3);
 hotWindPress=smooth(hotWindPress);
-md=zeros(length(hotWindPress),1);
-sd=zeros(length(hotWindPress),1);
-for i1=1:length(hotWindPress)
-    index=(max(1,i1-720):i1);
-    tempData=hotWindPress(index);
-    md(i1)=median(tempData);
-    sd(i1)=std(tempData);
-end
+% md=zeros(length(hotWindPress),1);
+% sd=zeros(length(hotWindPress),1);
+% for i1=1:length(hotWindPress)
+%     index=(max(1,i1-720):i1);
+%     tempData=hotWindPress(index);
+%     md(i1)=median(tempData);
+%     sd(i1)=std(tempData);
+% end
 % sHWP=(hotWindPress-md)./max(sd,0.0001);
 dHWP=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
 dHWP=[0;dHWP/std(dHWP)];
-data=hotWindPress(1:end-delay,1);
-clear data0 data1 sd md hotWindPress;
+% data=hotWindPress(1:end-delay,1);
+clear data0 date0 data1;
 
-
-[predict,Er]=fsc_ff({dHWP},{[false(size(dHWP,1),1),~false(size(dHWP,1),1)]},args);
-
-predict_label=predict>0.5;
-sv=predict_label(delay+1:end,1);
-
+load 'args_fsc_No3_0103.mat';
+disp('begin to ff');
+batches=100;
+T=size(dHWP,1)-delay;
+step=floor(T/batches);
+sv=false(batches*step,1);
+for i1=1:batches
+    disp(strcat('batches: ',num2str(i1)))
+    index=(i1-1)*step+1:i1*step+delay;
+    [predict,~]=fsc_ff({dHWP(index,:)},{[false(step+delay,1),~false(step+delay,1)]},args);
+    sv(index(1:step))=predict(delay+1:step+delay,1)>0.5;
+end
+data=hotWindPress(1:batches*step,1);
 figure;
-subplot(212);
+subplot(211);
 plot(find(~sv),data(~sv),'b.',find(sv),data(sv),'r.');
-subplot(213);
+subplot(212);
 plot(predict(delay+1:end,1));
 
 save(strcat('K:\GL_data\',num2str(No(i1)),'\sv.mat'),'sv');

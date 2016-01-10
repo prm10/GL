@@ -70,6 +70,10 @@ for t=2:T
     o1(t,:)=x2(t,:)*w_o+y2(t-1,:)*r_o+c2(t,:).*p_o;
     o2(t,:)=sigmoid(o1(t,:));
     y2(t,:)=o2(t,:).*tanh(c2(t,:));
+    
+    if mod(t,ceil(T/10))==0
+        disp(strcat(num2str(t/T*10,2),'%'));
+    end
 end
 
 function y=sigmoid(x)
