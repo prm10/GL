@@ -46,7 +46,7 @@ train_data=cell(0);
 train_label=cell(0);
 train_len=size(dataTrain,1);
 test_len=size(dataTest,1);
-rng(13);
+rng(11);
 lenInput=1000;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
@@ -93,10 +93,10 @@ switch choice
         save(args_name,'args');
     case 2%��������
         load(args_name);
-        args.maxecho=100;
+        args.maxecho=10;
         args.circletimes=100;
 %         args.momentum=0.9;
-%         args.learningrate=5e-2;
+        args.learningrate=2e-2;
 %         args.batchsize=3;
         [args]=fsc_train(args);
         save(args_name,'args');
