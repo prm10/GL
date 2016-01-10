@@ -15,4 +15,3 @@ function [adw]=fsc_ff_bp(args,input,label)
     for i1=length(args.layer)-2:-1:1
         [delta_up,adw.Weight{i1}]=LSTM_step_bp_fast(delta_up,args.Weight{i1},x2{i1},in2{i1},f2{i1},z2{i1},c2{i1},o2{i1},y2{i1});
     end
-

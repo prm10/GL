@@ -1,25 +1,28 @@
 function [args]=fsc_train(args)
     global train_data train_label test_data test_label;
+    poolobj = parpool();
     tic;
     h=waitbar(0);
     for i1=1:args.maxecho
-        waitbar(0,h,strcat('µÚ',num2str(i1),'/',num2str(args.maxecho),'´Îµü´ú'));
+        waitbar(0,h,strcat('ï¿½ï¿½',num2str(i1),'/',num2str(args.maxecho),'ï¿½Îµï¿½ï¿½'));
         for i2=1:args.circletimes
             index=1+floor(rand(args.batchsize,1)*length(train_data));
             adw=cell(args.batchsize,1);
-            for i3=1:args.batchsize%¶Ôµ¥¸öÑù±¾¼ÆËãÌÝ¶È
-                input=train_data{index(i3)};
-                label=train_label{index(i3)};
-                [adw{i3}]=fsc_ff_bp(args,input,label);
+            train_data1=train_data(index);
+            train_label1=train_label(index);
+            parfor i3=1:args.batchsize%ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½
+                input=train_data1{i3};
+                label=train_label1{i3};
+                adw{i3}=fsc_ff_bp(args,input,label);
             end
             args=fsc_weight_update(args,adw);
-            waitbar(i2/args.circletimes,h,strcat('µÚ',num2str(i1),'/',num2str(args.maxecho),'´Îµü´ú£º',num2str(i2),'/',num2str(args.circletimes)));
+            waitbar(i2/args.circletimes,h,strcat('ï¿½ï¿½',num2str(i1),'/',num2str(args.maxecho),'ï¿½Îµï¿½ï¿½',num2str(i2),'/',num2str(args.circletimes)));
         end
-       %% Í³¼ÆÎó²î
+       %% Í³ï¿½ï¿½ï¿½ï¿½ï¿½
         [~,error]=fsc_ff(test_data,test_label,args);
         fprintf('echo: %d \t test error: %.4f\n',i1,error);
         args.Er=[args.Er;error];
     end
     close(h);
     toc;
-
+    delete(poolobj);

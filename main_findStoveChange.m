@@ -4,7 +4,7 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-i1=2;%¸ßÂ¯±àºÅ
+i1=2;%ï¿½ï¿½Â¯ï¿½ï¿½ï¿½
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
 i2=6;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
@@ -46,9 +46,9 @@ train_data=cell(0);
 train_label=cell(0);
 train_len=size(dataTrain,1);
 test_len=size(dataTest,1);
-rng(11);
+rng(13);
 lenInput=1000;
-num=1;
+num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
@@ -74,24 +74,24 @@ for i1=1:num
     test_label=[test_label;[a,~a]];
 end
 
-% ²ÎÊýÉèÖÃ
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 args_name='args_fsc.mat';
-choice=1;
+choice=2;
 switch choice
-    case 1%³õÊ¼»¯
+    case 1%ï¿½ï¿½Ê¼ï¿½ï¿½
         args.maxecho=1;
         args.circletimes=100;
         args.momentum=0.9;
-        args.weightDecay=1e-5;
+        args.weightDecay=0;
         args.learningrate=1e-1;
-        args.batchsize=3;
-        args.layer=[1,20,10,2];
+        args.batchsize=12;
+        args.layer=[1,20,2];
         args.Er=[];
         args.outputLayer='softmax';
         args=fsc_initial(args);
         [args]=fsc_train(args);
         save(args_name,'args');
-    case 2%¼ÌÐøÔËËã
+    case 2%ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         load(args_name);
         args.maxecho=100;
         args.circletimes=100;
@@ -100,14 +100,15 @@ switch choice
 %         args.batchsize=3;
         [args]=fsc_train(args);
         save(args_name,'args');
-    case 3%ÌÝ¶È¼ìÑé
+    case 3%ï¿½Ý¶È¼ï¿½ï¿½ï¿½
         load(args_name);
         args.maxecho=1;
         args.circletimes=1;
         args.momentum=0;
         args.learningrate=0;
-        [args]=fsc_train(args);%¼ÆËãÏÂµ±Ç°µÄÌÝ¶È
-        vname='args.Weight{2, 1}.w_i';
+        
+        [args]=fsc_train(args);%ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½Ç°ï¿½ï¿½ï¿½Ý¶ï¿½
+        vname='args.Weight{2, 1}.b_k';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,'(1,1);');
         eval(s1);
@@ -127,11 +128,11 @@ end
 
 figure;
 plot((1:length(args.Er))*100,args.Er);
-title('Îó²îÏÂ½µÇúÏß');
-xlabel('µü´ú´ÎÊý');
-ylabel('Îó²î');
+title('ï¿½ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½ï¿½ï¿½');
+xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
+ylabel('ï¿½ï¿½ï¿½');
 
-i1=1;
+i1=2;
 [predict,error2]=fsc_ff(test_data(i1),test_label(i1),args);
 data=test_data{i1}(1:end-delay,1);
 range1=test_label{i1}(delay+1:end,1);

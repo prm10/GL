@@ -1,5 +1,5 @@
 function Weight=lstm_setup(layers)
-n=length(layers)-1;%lstm+tanhµÄ²ãÊý
+n=length(layers)-1;%lstm+tanhï¿½Ä²ï¿½ï¿½ï¿½
 Weight=cell(n,1);
 for i1=1:n-1
     M=layers(i1);
@@ -9,7 +9,7 @@ for i1=1:n-1
     Weight{i1}.r_i=1/N*normrnd(0,0.1,[N,N]);
     Weight{i1}.p_i=zeros(1,N);
     % forget gates
-    Weight{i1}.w_f=1/M*[normrnd(0,0.1,[M,N]);zeros(1,N)];
+    Weight{i1}.w_f=1/M*[normrnd(0,0.1,[M,N]);ones(1,N)];
     Weight{i1}.r_f=1/N*normrnd(0,0.1,[N,N]);
     Weight{i1}.p_f=zeros(1,N);
     % cells

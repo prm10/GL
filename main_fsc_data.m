@@ -4,7 +4,7 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-i1=2;%¸ßÂ¯±àºÅ
+i1=2;%ï¿½ï¿½Â¯ï¿½ï¿½ï¿½
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
 i2=6;%:length(input0)
 data1=input0{i2}(:,commenDim{GL(i1)});
@@ -27,7 +27,7 @@ hotWindPress=data1(:,i3);
 
 hotWindPress=smooth(hotWindPress);
 [indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
-%% ÈË¹¤Î¢µ÷ i1=1; i2=6;
+%% ï¿½Ë¹ï¿½Î¢ï¿½ï¿½ i1=1; i2=6;
 %{
 indexChange(120:155,1)=1;
 indexChange(360:378,1)=0;
