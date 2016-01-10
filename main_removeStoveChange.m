@@ -7,7 +7,7 @@ plotvariable;
 i1=2;%¸ßÂ¯±àºÅ
 delay=60;
 
-load(strcat('K:\GL_data\',num2str(No(i1)),'\data.mat'));
+load(strcat('..\GL_data\',num2str(No(i1)),'\data.mat'));
 data1=data0(:,commenDim{GL(i1)});
 i3=17;
 hotWindPress=data1(:,i3);
@@ -32,9 +32,9 @@ batches=100;
 T=size(dHWP,1)-delay;
 step=floor(T/batches);
 sv=false(batches*step,1);
-for i1=1:batches
-    disp(strcat('batches: ',num2str(i1)))
-    index=(i1-1)*step+1:i1*step+delay;
+for i4=1:batches
+    disp(strcat('batches: ',num2str(i4)))
+    index=(i4-1)*step+1:i4*step+delay;
     [predict,~]=fsc_ff({dHWP(index,:)},{[false(step+delay,1),~false(step+delay,1)]},args);
     sv(index(1:step))=predict(delay+1:step+delay,1)>0.5;
 end
@@ -45,7 +45,7 @@ plot(find(~sv),data(~sv),'b.',find(sv),data(sv),'r.');
 subplot(212);
 plot(predict(delay+1:end,1));
 
-save(strcat('K:\GL_data\',num2str(No(i1)),'\sv.mat'),'sv');
+save(strcat('..\GL_data\',num2str(No(i1)),'\sv.mat'),'sv');
 
 %{
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
