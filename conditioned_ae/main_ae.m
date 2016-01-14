@@ -118,7 +118,7 @@ plot((1:length(args.Er))*100,args.Er);
 % xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
 % ylabel('ï¿½ï¿½ï¿?);
 
-i1=1;
+i1=2;
 data=test_data(i1);
 label=test_label(i1);
 T=size(data{1},1);
