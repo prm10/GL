@@ -24,11 +24,13 @@ label: L*dim2
         [x22{i1},in22{i1},f22{i1},z22{i1},c22{i1},o22{i1},y22{i1}]=LSTM_step_ff_fast(x1,c0,args.WeightDecoder{i1});
         x1=y22{i1};
     end
-    predict=LSTM_output_ff(args.outputLayer,args.WeightDecoder{end}.w_k,args.WeightDecoder{end}.b_k,y22{end});
-    
+%     predict=LSTM_output_ff(args.outputLayer,args.WeightDecoder{end}.w_k,args.WeightDecoder{end}.b_k,y22{end});
+    predict=tanh_output_ff(args.WeightDecoder{end}.w_k,args.WeightDecoder{end}.b_k,y22{end});
     %% ·´Ïò´«²¥
     %decoder
-    [delta_up,dw_k,db_k]=LSTM_output_bp(args.outputLayer,args.WeightDecoder{end}.w_k,y22{end},label,predict);
+%     [delta_up,dw_k,db_k]=LSTM_output_bp(args.outputLayer,args.WeightDecoder{end}.w_k,y22{end},label,predict);
+    delta_up=-(label-predict)/size(predict,1);
+    [delta_up,dw_k,db_k]=tanh_output_bp(delta_up,args.WeightDecoder{end}.w_k,y22{end},predict);
     adw.WeightDecoder{length(args.layerDecoder)-1}.w_k=dw_k;
     adw.WeightDecoder{length(args.layerDecoder)-1}.b_k=db_k;
     for i1=length(args.layerDecoder)-2:-1:1

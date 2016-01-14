@@ -37,7 +37,7 @@ test_len=size(hotWindPress,1)-train_len;
 dataTrain=hotWindPress(1:train_len,:);
 dataTest=hotWindPress(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6*15;
+lenInput=6*20;
 L=6*10;
 num=1;
 index=floor(rand(num,1)*(train_len-lenInput));
@@ -92,7 +92,7 @@ switch choice
         args.learningrate=0;
         
         [args]=ae_train(args);
-        vname='args.WeightEncoder{1, 1}.w_i';
+        vname='args.WeightDecoder{2, 1}.b_k';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,'(1,1);');
         eval(s1);
