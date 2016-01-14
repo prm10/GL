@@ -93,7 +93,7 @@ switch choice
         args.weightDecay=0;
         
         [args]=ae_train(args);
-        vname='args.WeightStatic.w_k2';
+        vname='args.WeightStatic.b_k2';
         loc='(end,end)';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,loc,';');
