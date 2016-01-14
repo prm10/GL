@@ -86,7 +86,7 @@ switch choice
         args.batchsize=12;
         args.layerEncoder=[1,200,3];
         args.layerStatic=[3 10];
-        args.layerEncoder=[3+1,200,1];
+        args.layerDecoder=[3+1,200,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
