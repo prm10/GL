@@ -48,7 +48,7 @@ label: L*dim2
     adw.WeightEncoder{length(args.layerEncoder)-1}.b_k=db_k;
     delta_up=[zeros(T-1,size(dw_k,1));delta_up];
     for i1=length(args.layerEncoder)-2:-1:1
-        [delta_up,adw.WeightEncoder{i1}]=LSTM_step_bp_fast(delta_up,args.WeightEncoder{i1},x22{i1},in22{i1},f22{i1},z22{i1},c22{i1},o22{i1},y22{i1});
+        [delta_up,adw.WeightEncoder{i1}]=LSTM_step_bp_fast(delta_up,args.WeightEncoder{i1},x21{i1},in21{i1},f21{i1},z21{i1},c21{i1},o21{i1},y21{i1});
     end
     
     

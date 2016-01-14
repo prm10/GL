@@ -5,59 +5,46 @@ GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
 i1=2;
-load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
+load(strcat('..\data\',num2str(No(i1)),'\data_labeled.mat'));
+load(strcat('..\data\',num2str(No(i1)),'\sv.mat'));
 i2=6;
 data1=input0{i2}(:,commenDim{GL(i1)});
+sv1=sv{i2};
 
 i3=17;
-hotWindPress=data1(:,i3);
-hotWindPress=smooth(hotWindPress);
-
-% coldWind=data1(:,8);
-[indexChange,sHWP,dHWP]=FindStoveChange(hotWindPress);
+hotWindPress=data1(~sv1,i3);
+Mh=M(i3);
+Sh=S(i3);
+T=size(hotWindPress,1);
+hotWindPress=(hotWindPress-ones(T,1)*Mh)./(ones(T,1)*Sh);
+% hotWindPress=smooth(hotWindPress);
+%{
 figure;
-subplot(311);
-plot(find(~indexChange),hotWindPress(~indexChange),'b.',find(indexChange),hotWindPress(indexChange),'r.');
-subplot(312);
-plot(find(~indexChange),dHWP(~indexChange),'b.',find(indexChange),dHWP(indexChange),'r.');
-subplot(313);
-plot(find(~indexChange),sHWP(~indexChange),'b.',find(indexChange),sHWP(indexChange),'r.');
-% figure;
-% plot(find(~indexChange),hotWindPress(~indexChange),'b.',find(indexChange),hotWindPress(indexChange),'r.');
-
-delay=60;
-hotWindPressLabel=[false(delay,1);indexChange(1:end-delay,1)];
-save('fscData.mat','hotWindPress','hotWindPressLabel','dHWP','sHWP','delay');
+subplot(211);
+plot(data1(:,i3));
+subplot(212);
+plot(hotWindPress);
 %}
+
 %%
-% load('fscData.mat');
-
-% range=1:1000;
-% figure;
-% subplot(211);
-% plot(hotWindPress(range,:));
-% subplot(212);
-% plot(hotWindPressLabel(range,:));
-
 %
-load('fscDataHWP.mat');
 global train_data train_label test_data test_label;
 train_data=cell(0);
 train_label=cell(0);
-train_len=size(dataTrain,1);
-test_len=size(dataTest,1);
+
+train_len=ceil(size(hotWindPress,1)/2);
+test_len=size(hotWindPress,1)-train_len;
+dataTrain=hotWindPress(1:train_len,:);
+dataTest=hotWindPress(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=1000;
-num=1000;
+lenInput=6*15;
+L=6*10;
+num=1;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
-%     range1=1:size(dHWP,1);
     train_data=[train_data;[dataTrain(range1,:)]];
-    a=labelTrain(range1,:);
-    a(1+delay:lenInput,1)=a(1:lenInput-delay,1);
-    a(1:delay,1)=false;
-    train_label=[train_label;[a,~a]];
+    train_label=[train_label;[dataTrain(range1(end:-1:end-L+1),:)]];
 end
 
 test_data=cell(0);
@@ -66,16 +53,12 @@ num=10;
 index=floor(rand(num,1)*(test_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
-%     range1=1:size(dHWP,1);
     test_data=[test_data;[dataTest(range1,:)]];
-    a=labelTest(range1,:);
-    a(1+delay:lenInput,1)=a(1:lenInput-delay,1);
-    a(1:delay,1)=false;
-    test_label=[test_label;[a,~a]];
+    test_label=[test_label;[dataTest(range1(end:-1:end-L+1),:)]];
 end
 
-args_name='args_fsc.mat';
-choice=2;
+args_name='args_ae.mat';
+choice=3;
 switch choice
     case 1
         args.maxecho=1;
@@ -83,7 +66,7 @@ switch choice
         args.momentum=0.9;
         args.weightDecay=0;
         args.learningrate=1e-1;
-        args.batchsize=12;
+        args.batchsize=1;
         args.layerEncoder=[1,200,3];
         args.layerStatic=[3 10];
         args.layerDecoder=[3+1,200,1];
@@ -99,7 +82,7 @@ switch choice
 %         args.momentum=0.9;
         args.learningrate=2e-2;
 %         args.batchsize=3;
-        [args]=fsc_train(args);
+        [args]=ae_train(args);
         save(args_name,'args');
     case 3
         load(args_name);
@@ -108,8 +91,8 @@ switch choice
         args.momentum=0;
         args.learningrate=0;
         
-        [args]=fsc_train(args);
-        vname='args.Weight{2, 1}.b_k';
+        [args]=ae_train(args);
+        vname='args.WeightEncoder{1, 1}.w_i';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,'(1,1);');
         eval(s1);
@@ -118,34 +101,30 @@ switch choice
         s2=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)+error_delta;');
         eval(s2);
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
-        [~,error1]=fsc_ff(train_data,train_label,args);
+        [~,error1]=ae_ff(train_data,train_label,args);
         s3=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)-2*error_delta;');
         eval(s3);
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)-2*error_delta;
-        [~,error2]=fsc_ff(train_data,train_label,args);
+        [~,error2]=ae_ff(train_data,train_label,args);
         dreal=(error1-error2)/error_delta/2;
         accuracy=abs((dcal-dreal)/dreal);
 end
 
-figure;
-plot((1:length(args.Er))*100,args.Er);
+% figure;
+% plot((1:length(args.Er))*100,args.Er);
 % title('');
 % xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
 % ylabel('ï¿½ï¿½ï¿?);
 
-i1=2;
-[predict,error2]=fsc_ff(test_data(i1),test_label(i1),args);
-data=test_data{i1}(1:end-delay,1);
-range1=test_label{i1}(delay+1:end,1);
-predict_label=predict>0.5;
-range2=predict_label(delay+1:end,1);
+i1=1;
+data=test_data(i1);
+label=test_label(i1);
+T=size(data{1},1);
+L=size(label{1},1);
+[predict,error2]=ae_ff(data,label,args);
+
 figure;
-subplot(311);
-plot(find(~range1),data(~range1),'b.',find(range1),data(range1),'r.');
-subplot(312);
-plot(find(~range2),data(~range2),'b.',find(range2),data(range2),'r.');
-subplot(313);
-plot(predict(delay+1:end,1));
+plot(1:T,data{1},'b.',T:-1:T-L+1,label{1},'r.',T:-1:T-L+1,predict,'g.');
 %}
 
 %{
