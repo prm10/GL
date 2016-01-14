@@ -37,9 +37,9 @@ test_len=size(hotWindPress,1)-train_len;
 dataTrain=hotWindPress(1:train_len,:);
 dataTest=hotWindPress(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6*20;
-L=6*10;
-num=1;
+lenInput=6*30;
+L=6*20;
+num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
@@ -58,7 +58,7 @@ for i1=1:num
 end
 
 args_name='args_ae.mat';
-choice=3;
+choice=2;
 switch choice
     case 1
         args.maxecho=1;
@@ -67,9 +67,9 @@ switch choice
         args.weightDecay=0;
         args.learningrate=1e-1;
         args.batchsize=1;
-        args.layerEncoder=[1,200,3];
-        args.layerStatic=[3 10];
-        args.layerDecoder=[3+1,200,1];
+        args.layerEncoder=[1,20,100];
+        args.layerStatic=[100 10];
+        args.layerDecoder=[100+1,20,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
@@ -80,8 +80,8 @@ switch choice
         args.maxecho=10;
         args.circletimes=100;
 %         args.momentum=0.9;
-        args.learningrate=2e-2;
-%         args.batchsize=3;
+%         args.learningrate=2e-2;
+        args.batchsize=5;
         [args]=ae_train(args);
         save(args_name,'args');
     case 3
@@ -112,8 +112,8 @@ switch choice
         accuracy=abs((dcal-dreal)/dreal);
 end
 
-% figure;
-% plot((1:length(args.Er))*100,args.Er);
+figure;
+plot((1:length(args.Er))*100,args.Er);
 % title('');
 % xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
 % ylabel('ï¿½ï¿½ï¿?);
