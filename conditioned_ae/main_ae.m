@@ -90,19 +90,21 @@ switch choice
         args.circletimes=1;
         args.momentum=0;
         args.learningrate=0;
+        args.weightDecay=0;
         
         [args]=ae_train(args);
-        vname='args.WeightDecoder{2, 1}.b_k';
+        vname='args.WeightStatic.w_k2';
+        loc='(end,end)';
         vname=vname(6:end);
-        s1=strcat('dcal=args.Mom.',vname,'(1,1);');
+        s1=strcat('dcal=args.Mom.',vname,loc,';');
         eval(s1);
     %     dcal=args.Mom.WeightPredict{1, 1}.w_i(1,1);
         error_delta=1e-10/dcal;%1e-5;%
-        s2=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)+error_delta;');
+        s2=strcat('args.',vname,loc,'=args.',vname,loc,'+error_delta;');
         eval(s2);
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
         [~,error1]=ae_ff(train_data,train_label,args);
-        s3=strcat('args.',vname,'(1,1)=args.',vname,'(1,1)-2*error_delta;');
+        s3=strcat('args.',vname,loc,'=args.',vname,loc,'-2*error_delta;');
         eval(s3);
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)-2*error_delta;
         [~,error2]=ae_ff(train_data,train_label,args);

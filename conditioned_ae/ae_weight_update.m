@@ -89,3 +89,4 @@ for i2=1:length(MW)-1
 	MW{i2}.p_o=momentum*MW{i2}.p_o+wd*W{i2}.p_o;
 end
 MW{end}.w_k=momentum*MW{end}.w_k+wd*W{end}.w_k;
+MW{end}.b_k=momentum*MW{end}.b_k;
