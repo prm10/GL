@@ -1,25 +1,24 @@
 function args=ae_weight_update(args,adw)
+tdw.Weight=weight_decay(args.Weight,args.Mom.Weight,args.momentum,args.weightDecay);
 
-function tdw=weight_decay(W,Mom,momentum,wd)
-
-tdw=args.Mom;%total gradient weight
-wd=args.weightDecay;
-%% 动量衰减
-for i2=1:length(tdw.Weight)-1
-	tdw.Weight{i2}.w_i=args.momentum*tdw.Weight{i2}.w_i+wd*args.Weight{i2}.w_i;
-	tdw.Weight{i2}.r_i=args.momentum*tdw.Weight{i2}.r_i+wd*args.Weight{i2}.r_i;
-	tdw.Weight{i2}.p_i=args.momentum*tdw.Weight{i2}.p_i+wd*args.Weight{i2}.p_i;
-	tdw.Weight{i2}.w_f=args.momentum*tdw.Weight{i2}.w_f+wd*args.Weight{i2}.w_f;
-	tdw.Weight{i2}.r_f=args.momentum*tdw.Weight{i2}.r_f+wd*args.Weight{i2}.r_f;
-	tdw.Weight{i2}.p_f=args.momentum*tdw.Weight{i2}.p_f+wd*args.Weight{i2}.p_f;
-	tdw.Weight{i2}.w_z=args.momentum*tdw.Weight{i2}.w_z+wd*args.Weight{i2}.w_z;
-	tdw.Weight{i2}.r_z=args.momentum*tdw.Weight{i2}.r_z+wd*args.Weight{i2}.r_z;
-	tdw.Weight{i2}.w_o=args.momentum*tdw.Weight{i2}.w_o+wd*args.Weight{i2}.w_o;
-	tdw.Weight{i2}.r_o=args.momentum*tdw.Weight{i2}.r_o+wd*args.Weight{i2}.r_o;
-	tdw.Weight{i2}.p_o=args.momentum*tdw.Weight{i2}.p_o+wd*args.Weight{i2}.p_o;
+function MW=weight_decay(W,MW,momentum,wd)
+% 动量衰减
+for i2=1:length(MW)-1
+	MW{i2}.w_i=momentum*MW{i2}.w_i+wd*W{i2}.w_i;
+	MW{i2}.r_i=momentum*MW{i2}.r_i+wd*W{i2}.r_i;
+	MW{i2}.p_i=momentum*MW{i2}.p_i+wd*W{i2}.p_i;
+	MW{i2}.w_f=momentum*MW{i2}.w_f+wd*W{i2}.w_f;
+	MW{i2}.r_f=momentum*MW{i2}.r_f+wd*W{i2}.r_f;
+	MW{i2}.p_f=momentum*MW{i2}.p_f+wd*W{i2}.p_f;
+	MW{i2}.w_z=momentum*MW{i2}.w_z+wd*W{i2}.w_z;
+	MW{i2}.r_z=momentum*MW{i2}.r_z+wd*W{i2}.r_z;
+	MW{i2}.w_o=momentum*MW{i2}.w_o+wd*W{i2}.w_o;
+	MW{i2}.r_o=momentum*MW{i2}.r_o+wd*W{i2}.r_o;
+	MW{i2}.p_o=momentum*MW{i2}.p_o+wd*W{i2}.p_o;
 end
-tdw.Weight{end}.w_k=args.momentum*tdw.Weight{end}.w_k+wd*args.Weight{end}.w_k;
-tdw.Weight{end}.b_k=args.momentum*tdw.Weight{end}.b_k+wd*args.Weight{end}.b_k;
+MW{end}.w_k=momentum*MW{end}.w_k+wd*W{end}.w_k;
+MW{end}.b_k=momentum*MW{end}.b_k+wd*W{end}.b_k;
+
 
 function tdw=add_weight(tdw,adw)
 %%  加权求和
