@@ -5,73 +5,60 @@ GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
 i1=2;
-dataLen=1e4;
 
+range=1e4:2e4;
+%
+% load(strcat('..\data\',num2str(No(i1)),'\data_labeled.mat'));
+% load(strcat('..\data\',num2str(No(i1)),'\sv.mat'));
+load(strcat('../data/',num2str(No(i1)),'/data_labeled.mat'));
+load(strcat('../data/',num2str(No(i1)),'/sv.mat'));
+i2=6;
+data1=input0{i2}(:,commenDim{GL(i1)});
+sv1=sv{i2};
+
+i3=17;
+hotWindPress=data1(~sv1,i3);
+Mh=M(i3);
+Sh=S(i3);
+T=size(hotWindPress,1);
+hotWindPress=(hotWindPress-ones(T,1)*Mh)./(ones(T,1)*Sh);
+dHWP=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
+dHWP=[0;dHWP/std(dHWP)];
+dHWP=max(dHWP,-ones(size(dHWP)));
+dHWP=min(dHWP,ones(size(dHWP)));
+%{
 load(strcat('../../GL_data/',num2str(No(i1)),'/data.mat'));
 load(strcat('../../GL_data/',num2str(No(i1)),'/sv.mat'));
 % load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
 
-data1=data0(1:dataLen,commenDim{GL(i1)});
-sv1=sv(1:dataLen,:);
+data1=data0(range,commenDim{GL(i1)});
+sv1=sv(range,:);
 data1=data1(~sv1,:);
+
 i3=17;
 hotWindPress=data1(:,i3);
 hotWindPress=smooth(hotWindPress);
-
 clear data0 date0 data1 sv sv1;
-
-load 'args_fsc_No3_0103.mat';
-disp('begin to ff');
-batches=100;
-T=size(dHWP,1)-delay;
-step=floor(T/batches);
-sv=false(batches*step,1);
-for i4=1:batches
-    disp(strcat('batches: ',num2str(i4)))
-    index=(i4-1)*step+1:i4*step+delay;
-    [predict,~]=fsc_ff({dHWP(index,:)},{[false(step+delay,1),~false(step+delay,1)]},args);
-    sv(index(1:step))=predict(delay+1:step+delay,1)>0.5;
-end
-data=hotWindPress(1:batches*step,1);
-figure;
-subplot(211);
-plot(find(~sv),data(~sv),'b.',find(sv),data(sv),'r.');
-subplot(212);
-plot(predict(delay+1:end,1));
-
-save(strcat('..\GL_data\',num2str(No(i1)),'\sv.mat'),'sv');
-
-%{
-load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-sv=cell(0);
-for i2=1:length(input0)
-    data1=input0{i2}(:,commenDim{GL(i1)});
-    i3=17;
-    hotWindPress=data1(:,i3);
-    hotWindPress=smooth(hotWindPress);
-    [hotWindPressLabel,sHWP,dHWP]=FindStoveChange(hotWindPress);
-
-    label=hotWindPressLabel;
-    [predict,Er]=fsc_ff({dHWP},{[hotWindPressLabel,~hotWindPressLabel]},args);
-    data=hotWindPress(1:end-delay,1);
-
-    % load('fscDataHWP.mat');
-    % label=[false(delay,1);labelTrain(1:end-delay,1)];
-    % [predict,Er]=fsc_ff({dataTrain},{[label,~label]},args);
-    % data=data0Train(1:end-delay,1);
-
-    range1=label(delay+1:end,1);
-    predict_label=predict>0.5;
-    range2=predict_label(delay+1:end,1);
-    
-    sv=[sv;range2];
-    figure;
-    subplot(311);
-    plot(find(~range1),data(~range1),'b.',find(range1),data(range1),'r.');
-    subplot(312);
-    plot(find(~range2),data(~range2),'b.',find(range2),data(range2),'r.');
-    subplot(313);
-    plot(predict(delay+1:end,1));
-end
-save(strcat('data\',num2str(No(i1)),'\sv.mat'),'sv');
 %}
+
+
+load('args_ae.mat');
+disp('ff begin');
+tic;
+output=encode_ff(args,dHWP);
+toc;
+
+K=3;
+Idx=kmeans(output,K);
+str_cmd='plot(';
+ind=cell(0);
+figure;
+for i1=1:K
+    ind{i1}=find(Idx==i1);
+    str_cmd=strcat(str_cmd,'ind{',num2str(i1),'},hotWindPress(ind{',num2str(i1),'},1),''.'',');
+end
+str_cmd=str_cmd(1:end-1);
+str_cmd=strcat(str_cmd,');');
+eval(str_cmd);
+% plot(hotWindPress,'--');
+

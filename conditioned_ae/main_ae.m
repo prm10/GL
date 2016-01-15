@@ -19,11 +19,15 @@ Mh=M(i3);
 Sh=S(i3);
 T=size(hotWindPress,1);
 hotWindPress=(hotWindPress-ones(T,1)*Mh)./(ones(T,1)*Sh);
+dHWP=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
+dHWP=[0;dHWP/std(dHWP)];
+dHWP=max(dHWP,-ones(size(dHWP)));
+dHWP=min(dHWP,ones(size(dHWP)));
 % hotWindPress=smooth(hotWindPress);
 %{
 figure;
 subplot(211);
-plot(data1(:,i3));
+plot(dHWP);
 subplot(212);
 plot(hotWindPress);
 %}
@@ -36,8 +40,8 @@ train_label=cell(0);
 
 train_len=ceil(size(hotWindPress,1)/2);
 test_len=size(hotWindPress,1)-train_len;
-dataTrain=hotWindPress(1:train_len,:);
-dataTest=hotWindPress(1+train_len:test_len+train_len,:);
+dataTrain=dHWP(1:train_len,:);
+dataTest=dHWP(1+train_len:test_len+train_len,:);
 rng(11);
 lenInput=6*30;
 L=6*20;
@@ -60,17 +64,17 @@ for i1=1:num
 end
 
 args_name='args_ae.mat';
-choice=2;
+choice=1;
 switch choice
     case 1
-        args.maxecho=100;
+        args.maxecho=10;
         args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=0;
         args.learningrate=1e-1;
         args.batchsize=12;
         args.layerEncoder=[1,200,100];
-        args.layerStatic=[100 10];
+        args.layerStatic=[100 20];
         args.layerDecoder=[100+1,200,1];
         args.Er=[];
         args.outputLayer='tanh';
@@ -82,7 +86,7 @@ switch choice
         args.maxecho=10;
         args.circletimes=100;
 %         args.momentum=0.9;
-        args.learningrate=0.5;
+        args.learningrate=0.05;
         args.batchsize=8;
         [args]=ae_train(args);
         save(args_name,'args');
@@ -121,14 +125,16 @@ plot((1:length(args.Er))*100,args.Er);
 % ylabel('���?);
 
 i1=2;
-data=test_data(i1);
-label=test_label(i1);
+% data=test_data(i1);
+% label=test_label(i1);
+data=train_data(i1);
+label=train_label(i1);
 T=size(data{1},1);
 L=size(label{1},1);
 [predict,error2]=ae_ff(data,label,args);
 
 figure;
-plot(1:T,data{1},'b.',T:-1:T-L+1,label{1},'r.',T:-1:T-L+1,predict,'g.');
+plot(1:T,data{1},'b',T:-1:T-L+1,label{1},'r.',T:-1:T-L+1,predict,'g--');
 %}
 
 %{
