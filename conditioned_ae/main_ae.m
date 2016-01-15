@@ -5,8 +5,10 @@ GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
 i1=2;
-load(strcat('..\data\',num2str(No(i1)),'\data_labeled.mat'));
-load(strcat('..\data\',num2str(No(i1)),'\sv.mat'));
+% load(strcat('..\data\',num2str(No(i1)),'\data_labeled.mat'));
+% load(strcat('..\data\',num2str(No(i1)),'\sv.mat'));
+load(strcat('../data/',num2str(No(i1)),'/data_labeled.mat'));
+load(strcat('../data/',num2str(No(i1)),'/sv.mat'));
 i2=6;
 data1=input0{i2}(:,commenDim{GL(i1)});
 sv1=sv{i2};
@@ -61,15 +63,15 @@ args_name='args_ae.mat';
 choice=2;
 switch choice
     case 1
-        args.maxecho=1;
+        args.maxecho=100;
         args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=0;
         args.learningrate=1e-1;
-        args.batchsize=1;
-        args.layerEncoder=[1,20,100];
+        args.batchsize=12;
+        args.layerEncoder=[1,200,100];
         args.layerStatic=[100 10];
-        args.layerDecoder=[100+1,20,1];
+        args.layerDecoder=[100+1,200,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
@@ -80,8 +82,8 @@ switch choice
         args.maxecho=10;
         args.circletimes=100;
 %         args.momentum=0.9;
-%         args.learningrate=2e-2;
-        args.batchsize=5;
+        args.learningrate=0.5;
+        args.batchsize=8;
         [args]=ae_train(args);
         save(args_name,'args');
     case 3
@@ -116,7 +118,7 @@ figure;
 plot((1:length(args.Er))*100,args.Er);
 % title('');
 % xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
-% ylabel('ï¿½ï¿½ï¿?);
+% ylabel('ï¿½ï¿½ï¿½?);
 
 i1=2;
 data=test_data(i1);

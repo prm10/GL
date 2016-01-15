@@ -4,10 +4,12 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[1;8;13;17;20;24];
 plotvariable;
-i1=2;%¸ßÂ¯±àºÅ
+i1=2;%ï¿½ï¿½Â¯ï¿½ï¿½ï¿½
 delay=60;
 
-load(strcat('..\GL_data\',num2str(No(i1)),'\data.mat'));
+% load(strcat('..\GL_data\',num2str(No(i1)),'\data.mat'));
+load(strcat('../GL_data/',num2str(No(i1)),'/data.mat'));
+
 data1=data0(:,commenDim{GL(i1)});
 i3=17;
 hotWindPress=data1(:,i3);
@@ -45,7 +47,8 @@ plot(find(~sv),data(~sv),'b.',find(sv),data(sv),'r.');
 subplot(212);
 plot(predict(delay+1:end,1));
 
-save(strcat('..\GL_data\',num2str(No(i1)),'\sv.mat'),'sv');
+% save(strcat('..\GL_data\',num2str(No(i1)),'\sv.mat'),'sv');
+save(strcat('../GL_data/',num2str(No(i1)),'/sv.mat'),'sv');
 
 %{
 load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
