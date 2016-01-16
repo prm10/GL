@@ -1,11 +1,13 @@
 function args=ae_weight_update(args,adw)
+%% 权重衰减
 tdw.WeightEncoder=weight_decay(args.WeightEncoder,args.Mom.WeightEncoder,args.momentum,args.weightDecay);
 tdw.WeightStatic.w_k1=args.momentum*args.Mom.WeightStatic.w_k1+args.weightDecay*args.WeightStatic.w_k1;
 tdw.WeightStatic.b_k1=args.momentum*args.Mom.WeightStatic.b_k1;
 tdw.WeightStatic.w_k2=args.momentum*args.Mom.WeightStatic.w_k2+args.weightDecay*args.WeightStatic.w_k2;
 tdw.WeightStatic.b_k2=args.momentum*args.Mom.WeightStatic.b_k2;
 tdw.WeightDecoder=weight_decay(args.WeightDecoder,args.Mom.WeightDecoder,args.momentum,args.weightDecay);
-
+%% 限制梯度
+% adw=clamp(adw,args.limit);
 %%  加权求和
 for i1=1:length(adw)
     for i2=1:length(tdw.WeightEncoder)-1

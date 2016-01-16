@@ -64,7 +64,7 @@ for i1=1:num
 end
 
 args_name='args_ae.mat';
-choice=1;
+choice=2;
 switch choice
     case 1
         args.maxecho=10;
@@ -73,6 +73,7 @@ switch choice
         args.weightDecay=0;
         args.learningrate=1e-1;
         args.batchsize=12;
+        args.limit=1;
         args.layerEncoder=[1,200,100];
         args.layerStatic=[100 20];
         args.layerDecoder=[100+1,200,1];
@@ -83,10 +84,11 @@ switch choice
         save(args_name,'args');
     case 2
         load(args_name);
-        args.maxecho=10;
-        args.circletimes=100;
+        args.maxecho=500;
+        args.circletimes=10;
 %         args.momentum=0.9;
-        args.learningrate=0.05;
+        args.learningrate=2;
+        args.limit=1e-2/args.learningrate;
         args.batchsize=8;
         [args]=ae_train(args);
         save(args_name,'args');
@@ -122,7 +124,7 @@ figure;
 plot((1:length(args.Er))*100,args.Er);
 % title('');
 % xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
-% ylabel('ï¿½ï¿½ï¿½?);
+% ylabel('ï¿½ï¿½ï¿?);
 
 i1=2;
 % data=test_data(i1);
