@@ -1,4 +1,4 @@
-function [delta_down,dW]=LSTM_step_bp_fast(delta_up,W,x,in2,f2,z2,c,o2,y)
+function [delta_down,dW,delta_c0]=LSTM_step_bp_fast(delta_up,W,x,in2,f2,z2,c,o2,y)
     %% weight initial
     % input gates
     w_i=W.w_i;
@@ -39,7 +39,8 @@ function [delta_down,dW]=LSTM_step_bp_fast(delta_up,W,x,in2,f2,z2,c,o2,y)
         delta_z(t,:)=delta_c(t,:).*in2(t,:).*dtanh(z2(t,:));
         delta_x(t,:)=delta_z(t,:)*w_z'+delta_i(t,:)*w_i'+delta_f(t,:)*w_f'+delta_o(t,:)*w_o';
     end
-
+    t=0;
+    delta_c0=p_i.*delta_i(t+1,:)+p_f.*delta_f(t+1,:)+delta_c(t+1,:).*f2(t+1,:);
 %     delta_o=restrict(delta_o);
 %     delta_f=restrict(delta_f);
 %     delta_i=restrict(delta_i);

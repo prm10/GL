@@ -43,8 +43,8 @@ test_len=size(hotWindPress,1)-train_len;
 dataTrain=dHWP(1:train_len,:);
 dataTest=dHWP(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6*30;
-L=6*20;
+lenInput=6*10;
+L=6*1;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
@@ -84,10 +84,10 @@ switch choice
         save(args_name,'args');
     case 2
         load(args_name);
-        args.maxecho=500;
-        args.circletimes=10;
+        args.maxecho=10;
+        args.circletimes=100;
 %         args.momentum=0.9;
-        args.learningrate=2;
+        args.learningrate=1e-1;
         args.limit=1e-2/args.learningrate;
         args.batchsize=8;
         [args]=ae_train(args);
