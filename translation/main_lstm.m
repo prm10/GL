@@ -21,7 +21,7 @@ end
 test_data=train_data(1);
 test_label=train_label(1);
 % ²ÎÊıÉèÖÃ
-% load('args.mat');
+load('args.mat');
 if(exist('args','var'))
     
 else

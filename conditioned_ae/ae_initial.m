@@ -12,30 +12,26 @@ end
 function W=ed_setup(layers,layersD)
 M=layers(1);
 N=layers(2);
-W.w_k1=1/M*normrnd(0,0.1,[M,N]);
-W.b_k1=zeros(1,N);
-W.w_k2=1/N*normrnd(0,0.1,[N,M]);
-W.b_k2=zeros(1,M);
+W.w_k=1/M*normrnd(0,0.1,[M,N]);
+W.b_k=zeros(1,N);
 
 layersC=layersD(2:end-1);
 for i1=1:length(layersC)
-    M=layersC(i1);
-    W.w_c{i1}=1/N*normrnd(0,0.1,[N,M]);
-    W.b_c{i1}=zeros(1,M);
+    N=layersC(i1);
+    W.w_c{i1}=1/N*normrnd(0,0.1,[M,N]);
+    W.b_c{i1}=zeros(1,N);
 end
 end
 function W=ed_mom_setup(layers,layersD)
 M=layers(1);
 N=layers(2);
-W.w_k1=zeros(M,N);
-W.b_k1=zeros(1,N);
-W.w_k2=zeros(N,M);
-W.b_k2=zeros(1,M);
+W.w_k=zeros(M,N);
+W.b_k=zeros(1,N);
 
 layersC=layersD(2:end-1);
 for i1=1:length(layersC)
-    M=layersC(i1);
-    W.w_c{i1}=zeros(N,M);
-    W.b_c{i1}=zeros(1,M);
+    N=layersC(i1);
+    W.w_c{i1}=zeros(M,N);
+    W.b_c{i1}=zeros(1,N);
 end
 end

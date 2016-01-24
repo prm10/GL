@@ -43,14 +43,14 @@ test_len=size(hotWindPress,1)-train_len;
 dataTrain=dHWP(1:train_len,:);
 dataTest=dHWP(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6*10;
-L=6*1;
+lenInput=6;
+L=2;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
     train_data=[train_data;[dataTrain(range1,:)]];
-    train_label=[train_label;[dataTrain(range1(end:-1:end-L+1),:)]];
+    train_label=[train_label;[dataTrain(range1(end-1:-1:end-L),:)]];
 end
 
 test_data=cell(0);
@@ -60,23 +60,23 @@ index=floor(rand(num,1)*(test_len-lenInput));
 for i1=1:num
     range1=index(i1)+1:index(i1)+lenInput;
     test_data=[test_data;[dataTest(range1,:)]];
-    test_label=[test_label;[dataTest(range1(end:-1:end-L+1),:)]];
+    test_label=[test_label;[dataTest(range1(end-1:-1:end-L),:)]];
 end
 
 args_name='args_ae.mat';
-choice=2;
+choice=3;
 switch choice
     case 1
         args.maxecho=10;
         args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=0;
-        args.learningrate=1e-1;
+        args.learningrate=1e-2;
         args.batchsize=12;
         args.limit=1;
-        args.layerEncoder=[1,200,100];
-        args.layerStatic=[100 20];
-        args.layerDecoder=[100+1,200,1];
+        args.layerEncoder=[1,20,10];
+        args.layerStatic=[10 5];
+        args.layerDecoder=[5+1,20,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
@@ -87,9 +87,9 @@ switch choice
         args.maxecho=10;
         args.circletimes=100;
 %         args.momentum=0.9;
-        args.learningrate=1e-1;
-        args.limit=1e-2/args.learningrate;
-        args.batchsize=8;
+        args.learningrate=1e-3;
+%         args.limit=1e-2/args.learningrate;
+        args.batchsize=20;
         [args]=ae_train(args);
         save(args_name,'args');
     case 3
@@ -99,9 +99,10 @@ switch choice
         args.momentum=0;
         args.learningrate=0;
         args.weightDecay=0;
-        
+        train_data=train_data(1);
+        train_label=train_label(1);
         [args]=ae_train(args);
-        vname='args.WeightStatic.b_k2';
+        vname='args.WeightStatic.w_k';
         loc='(end,end)';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,loc,';');
@@ -126,7 +127,7 @@ plot((1:length(args.Er))*100,args.Er);
 % xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
 % ylabel('ï¿½ï¿½ï¿?);
 
-i1=2;
+i1=1;
 % data=test_data(i1);
 % label=test_label(i1);
 data=train_data(i1);
@@ -136,7 +137,7 @@ L=size(label{1},1);
 [predict,error2]=ae_ff(data,label,args);
 
 figure;
-plot(1:T,data{1},'b',T:-1:T-L+1,label{1},'r.',T:-1:T-L+1,predict,'g--');
+plot(1:T,data{1},'b',T-1:-1:T-L,label{1},'r.',T-1:-1:T-L,predict,'g--');
 %}
 
 %{

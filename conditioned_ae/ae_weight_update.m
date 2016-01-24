@@ -1,10 +1,12 @@
 function args=ae_weight_update(args,adw)
 %% 权重衰减
 tdw.WeightEncoder=weight_decay(args.WeightEncoder,args.Mom.WeightEncoder,args.momentum,args.weightDecay);
-tdw.WeightStatic.w_k1=args.momentum*args.Mom.WeightStatic.w_k1+args.weightDecay*args.WeightStatic.w_k1;
-tdw.WeightStatic.b_k1=args.momentum*args.Mom.WeightStatic.b_k1;
-tdw.WeightStatic.w_k2=args.momentum*args.Mom.WeightStatic.w_k2+args.weightDecay*args.WeightStatic.w_k2;
-tdw.WeightStatic.b_k2=args.momentum*args.Mom.WeightStatic.b_k2;
+tdw.WeightStatic.w_k=args.momentum*args.Mom.WeightStatic.w_k+args.weightDecay*args.WeightStatic.w_k;
+tdw.WeightStatic.b_k=args.momentum*args.Mom.WeightStatic.b_k;
+for i1=1:length(args.Mom.WeightStatic.b_c)
+    tdw.WeightStatic.w_c{i1}=args.momentum*args.Mom.WeightStatic.w_c{i1}+args.weightDecay*args.WeightStatic.w_c{i1};
+    tdw.WeightStatic.b_c{i1}=args.momentum*args.Mom.WeightStatic.b_c{i1};
+end
 tdw.WeightDecoder=weight_decay(args.WeightDecoder,args.Mom.WeightDecoder,args.momentum,args.weightDecay);
 %% 限制梯度
 % adw=clamp(adw,args.limit);
@@ -26,10 +28,12 @@ for i1=1:length(adw)
     tdw.WeightEncoder{end}.w_k=tdw.WeightEncoder{end}.w_k+adw{i1}.WeightEncoder{end}.w_k/length(adw);
     tdw.WeightEncoder{end}.b_k=tdw.WeightEncoder{end}.b_k+adw{i1}.WeightEncoder{end}.b_k/length(adw);
 	
-    tdw.WeightStatic.w_k1=tdw.WeightStatic.w_k1+adw{i1}.WeightStatic.w_k1/length(adw);
-    tdw.WeightStatic.b_k1=tdw.WeightStatic.b_k1+adw{i1}.WeightStatic.b_k1/length(adw);
-	tdw.WeightStatic.w_k2=tdw.WeightStatic.w_k2+adw{i1}.WeightStatic.w_k2/length(adw);
-    tdw.WeightStatic.b_k2=tdw.WeightStatic.b_k2+adw{i1}.WeightStatic.b_k2/length(adw);
+	tdw.WeightStatic.w_k=tdw.WeightStatic.w_k+adw{i1}.WeightStatic.w_k/length(adw);
+    tdw.WeightStatic.b_k=tdw.WeightStatic.b_k+adw{i1}.WeightStatic.b_k/length(adw);
+    for i2=1:length(args.Mom.WeightStatic.b_c)
+        tdw.WeightStatic.w_c{i2}=tdw.WeightStatic.w_c{i2}+adw{i1}.WeightStatic.w_c{i2}/length(adw);
+        tdw.WeightStatic.b_c{i2}=tdw.WeightStatic.b_c{i2}+adw{i1}.WeightStatic.b_c{i2}/length(adw);
+    end
 	
     for i2=1:length(tdw.WeightDecoder)-1
         tdw.WeightDecoder{i2}.w_i=tdw.WeightDecoder{i2}.w_i+adw{i1}.WeightDecoder{i2}.w_i/length(adw);
@@ -53,11 +57,12 @@ args.Mom=tdw;
 %% 更新权值
 args.WeightEncoder=update_weight(args.WeightEncoder,args.learningrate,tdw.WeightEncoder);
 args.WeightDecoder=update_weight(args.WeightDecoder,args.learningrate,tdw.WeightDecoder);
-args.WeightStatic.w_k1=args.WeightStatic.w_k1-args.learningrate*tdw.WeightStatic.w_k1;
-args.WeightStatic.b_k1=args.WeightStatic.b_k1-args.learningrate*tdw.WeightStatic.b_k1;
-args.WeightStatic.w_k2=args.WeightStatic.w_k2-args.learningrate*tdw.WeightStatic.w_k2;
-args.WeightStatic.b_k2=args.WeightStatic.b_k2-args.learningrate*tdw.WeightStatic.b_k2;
-
+args.WeightStatic.w_k=args.WeightStatic.w_k-args.learningrate*tdw.WeightStatic.w_k;
+args.WeightStatic.b_k=args.WeightStatic.b_k-args.learningrate*tdw.WeightStatic.b_k;
+for i1=1:length(args.Mom.WeightStatic.b_c)
+    args.WeightStatic.w_c{i1}=args.WeightStatic.w_c{i1}-args.learningrate*tdw.WeightStatic.w_c{i1};
+    args.WeightStatic.b_c{i1}=args.WeightStatic.b_c{i1}-args.learningrate*tdw.WeightStatic.b_c{i1};
+end
 function W=update_weight(W,lr,dW)
 for i2=1:length(dW)-1
     W{i2}.w_i=W{i2}.w_i-lr*dW{i2}.w_i;
