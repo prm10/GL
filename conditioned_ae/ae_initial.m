@@ -11,9 +11,9 @@ end
 
 function W=ed_setup(layers,layersD)
 M=layers(1);
-N=layers(2);
-W.w_k=1/M*normrnd(0,0.1,[M,N]);
-W.b_k=zeros(1,N);
+% N=layers(2);
+% W.w_k=1/M*normrnd(0,0.1,[M,N]);
+% W.b_k=zeros(1,N);
 
 layersC=layersD(2:end-1);
 for i1=1:length(layersC)
@@ -24,9 +24,9 @@ end
 end
 function W=ed_mom_setup(layers,layersD)
 M=layers(1);
-N=layers(2);
-W.w_k=zeros(M,N);
-W.b_k=zeros(1,N);
+% N=layers(2);
+% W.w_k=zeros(M,N);
+% W.b_k=zeros(1,N);
 
 layersC=layersD(2:end-1);
 for i1=1:length(layersC)

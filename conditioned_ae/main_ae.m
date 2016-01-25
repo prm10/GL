@@ -43,8 +43,8 @@ test_len=size(hotWindPress,1)-train_len;
 dataTrain=dHWP(1:train_len,:);
 dataTest=dHWP(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6;
-L=2;
+lenInput=6*60;
+L=6*30;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
@@ -64,19 +64,19 @@ for i1=1:num
 end
 
 args_name='args_ae.mat';
-choice=3;
+choice=2;
 switch choice
     case 1
-        args.maxecho=10;
+        args.maxecho=1;
         args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=0;
-        args.learningrate=1e-2;
-        args.batchsize=12;
-        args.limit=1;
-        args.layerEncoder=[1,20,10];
-        args.layerStatic=[10 5];
-        args.layerDecoder=[5+1,20,1];
+        args.learningrate=1e-1;
+        args.batchsize=8;
+%         args.limit=1;
+        args.layerEncoder=[1,100,10];
+        args.layerStatic=[10];
+        args.layerDecoder=[10+1,100,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
@@ -84,12 +84,12 @@ switch choice
         save(args_name,'args');
     case 2
         load(args_name);
-        args.maxecho=10;
+        args.maxecho=100;
         args.circletimes=100;
 %         args.momentum=0.9;
-        args.learningrate=1e-3;
+        args.learningrate=1e-1;
 %         args.limit=1e-2/args.learningrate;
-        args.batchsize=20;
+        args.batchsize=8;
         [args]=ae_train(args);
         save(args_name,'args');
     case 3
@@ -102,13 +102,13 @@ switch choice
         train_data=train_data(1);
         train_label=train_label(1);
         [args]=ae_train(args);
-        vname='args.WeightStatic.w_k';
+        vname='args.WeightStatic.b_c{1}';
         loc='(end,end)';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,loc,';');
         eval(s1);
     %     dcal=args.Mom.WeightPredict{1, 1}.w_i(1,1);
-        error_delta=1e-10/dcal;%1e-5;%
+        error_delta=1e-11/dcal;%1e-5;%
         s2=strcat('args.',vname,loc,'=args.',vname,loc,'+error_delta;');
         eval(s2);
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
