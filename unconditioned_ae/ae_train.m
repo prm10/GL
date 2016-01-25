@@ -18,9 +18,9 @@ function [args]=ae_train(args)
             args=ae_weight_update(args,adw);
             waitbar(i2/args.circletimes,h,strcat(num2str(i1),'/',num2str(args.maxecho),': ',num2str(i2),'/',num2str(args.circletimes)));
         end
-       
+
         [~,error]=ae_ff(test_data,test_label,args);
-        fprintf('echo: %d \t test error: %.6f\n',i1,error);
+        fprintf('echo: %d \t test error: %.6f\n',i1,error*1e4);
         args.Er=[args.Er;error];
     end
     close(h);

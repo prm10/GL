@@ -40,11 +40,11 @@ train_label=cell(0);
 
 train_len=ceil(size(hotWindPress,1)/2);
 test_len=size(hotWindPress,1)-train_len;
-dataTrain=dHWP(1:train_len,:);
-dataTest=dHWP(1+train_len:test_len+train_len,:);
+dataTrain=hotWindPress(1:train_len,:);
+dataTest=hotWindPress(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6*60;
-L=6*30;
+lenInput=6*10;
+L=6*1;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
@@ -67,16 +67,16 @@ args_name='args_ae.mat';
 choice=2;
 switch choice
     case 1
-        args.maxecho=1;
+        args.maxecho=10;
         args.circletimes=100;
         args.momentum=0.9;
         args.weightDecay=0;
-        args.learningrate=1e-1;
+        args.learningrate=1e-2;
         args.batchsize=8;
 %         args.limit=1;
-        args.layerEncoder=[1,100,10];
-        args.layerStatic=[10];
-        args.layerDecoder=[10+1,100,1];
+        args.layerEncoder=[1,20,10];
+        args.layerStatic=[10 20];
+        args.layerDecoder=[10+1,20,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
@@ -89,7 +89,7 @@ switch choice
 %         args.momentum=0.9;
         args.learningrate=1e-1;
 %         args.limit=1e-2/args.learningrate;
-        args.batchsize=8;
+        args.batchsize=20;
         [args]=ae_train(args);
         save(args_name,'args');
     case 3
@@ -102,13 +102,13 @@ switch choice
         train_data=train_data(1);
         train_label=train_label(1);
         [args]=ae_train(args);
-        vname='args.WeightStatic.b_c{1}';
+        vname='args.WeightDecoder.w_o';
         loc='(end,end)';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,loc,';');
         eval(s1);
     %     dcal=args.Mom.WeightPredict{1, 1}.w_i(1,1);
-        error_delta=1e-11/dcal;%1e-5;%
+        error_delta=1e-15/dcal;%1e-5;%
         s2=strcat('args.',vname,loc,'=args.',vname,loc,'+error_delta;');
         eval(s2);
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
@@ -121,11 +121,14 @@ switch choice
         accuracy=abs((dcal-dreal)/dreal);
 end
 
+disp(strcat('args.Mom.WeightEncoder:',num2str(findMaxGradient(args.WeightEncoder))));
+disp(strcat('args.Mom.WeightStatic:',num2str(findMaxGradient(args.WeightStatic))));
+disp(strcat('args.Mom.WeightDecoder:',num2str(findMaxGradient(args.WeightDecoder))));
 figure;
 plot((1:length(args.Er))*100,args.Er);
-% title('');
-% xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
-% ylabel('ï¿½ï¿½ï¿?);
+title('error line');
+xlabel('iterator times');
+ylabel('error');
 
 i1=1;
 % data=test_data(i1);

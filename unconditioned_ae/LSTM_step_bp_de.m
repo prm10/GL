@@ -1,8 +1,9 @@
-function [delta_down,dW,delta_c0]=LSTM_step_bp_fast(delta_up,w_i,r_i,p_i,w_f,r_f,p_f,w_z,r_z,w_o,r_o,p_o,x,in2,f2,z2,c,o2,y)
+function [delta_down,dW,delta_c0]=LSTM_step_bp_de(label,predict,w_i,r_i,p_i,w_f,r_f,p_f,w_z,r_z,w_o,r_o,p_o,w_k,b_k,x,in2,f2,z2,c,o2,y)
     %%
-    T=size(delta_up,1);
+    [T,N]=size(label);
+    delta_k=-(label-predict)/size(predict,1).*(1-predict.^2);
     t=T;
-    delta_y(t,:)=delta_up(t,:);
+    delta_y(t,:)=delta_k(t,:)*w_k';
     delta_o(t,:)=delta_y(t,:).*tanh(c(t,:)).*dsigmoid(o2(t,:));
     delta_c(t,:)=delta_y(t,:).*o2(t,:).*dtanh(tanh(c(t,:)))+p_o.*delta_o(t,:);
     delta_f(t,:)=delta_c(t,:).*c(t-1,:).*dsigmoid(f2(t,:));
@@ -10,7 +11,8 @@ function [delta_down,dW,delta_c0]=LSTM_step_bp_fast(delta_up,w_i,r_i,p_i,w_f,r_f
     delta_z(t,:)=delta_c(t,:).*in2(t,:).*dtanh(z2(t,:));
     delta_x(t,:)=delta_z(t,:)*w_z'+delta_i(t,:)*w_i'+delta_f(t,:)*w_f'+delta_o(t,:)*w_o';
     for t=T-1:-1:1
-        delta_y(t,:)=delta_up(t,:)+delta_z(t+1,:)*r_z'+delta_i(t+1,:)*r_i'+delta_f(t+1,:)*r_f'+delta_o(t+1,:)*r_o';
+        delta_k(t,:)=delta_k(t,:)+delta_x(t,end-N:end-1).*(1-predict(t,:).^2);
+        delta_y(t,:)=delta_k(t,:)*w_k'+delta_z(t+1,:)*r_z'+delta_i(t+1,:)*r_i'+delta_f(t+1,:)*r_f'+delta_o(t+1,:)*r_o';
         delta_o(t,:)=delta_y(t,:).*tanh(c(t,:)).*dsigmoid(o2(t,:));
         delta_c(t,:)=delta_y(t,:).*o2(t,:).*dtanh(tanh(c(t,:)))+p_o.*delta_o(t,:)+p_i.*delta_i(t+1,:)...
             +p_f.*delta_f(t+1,:)+delta_c(t+1,:).*f2(t+1,:);
@@ -41,9 +43,10 @@ function [delta_down,dW,delta_c0]=LSTM_step_bp_fast(delta_up,w_i,r_i,p_i,w_f,r_f
     dW.p_f=sum(c(1:end-1,:).*delta_f(2:end,:));
     dW.p_o=sum(c.*delta_o);
 
+    dW.w_k=y'*delta_k;
+    dW.b_k=sum(delta_k,1);
+
 function y=dsigmoid(z)
     y=z.*(1-z);
 function y=dtanh(z)
     y=1-z.^2;
-function delta_out=restrict(delta)
-    delta_out=max(-1*ones(size(delta)),min(1*ones(size(delta)),delta));
