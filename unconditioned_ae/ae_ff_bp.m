@@ -37,3 +37,5 @@ label: L*dim2
 
     adw.WeightEncoder.w_k=dw_k;
     adw.WeightEncoder.b_k=db_k;
+
+    adw.er=sum((label-predict).^2)/2/size(label,1)/size(label,2);

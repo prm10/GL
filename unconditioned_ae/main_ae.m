@@ -43,8 +43,8 @@ test_len=size(hotWindPress,1)-train_len;
 dataTrain=hotWindPress(1:train_len,:);
 dataTest=hotWindPress(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6*10;
-L=6*1;
+lenInput=6;
+L=2;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
@@ -68,15 +68,15 @@ choice=2;
 switch choice
     case 1
         args.maxecho=10;
-        args.circletimes=100;
+        args.circletimes=10;
         args.momentum=0.9;
         args.weightDecay=0;
         args.learningrate=1e-2;
         args.batchsize=8;
 %         args.limit=1;
-        args.layerEncoder=[1,20,10];
-        args.layerStatic=[10 20];
-        args.layerDecoder=[10+1,20,1];
+        args.layerEncoder=[1,20,5];
+        args.layerStatic=[5 20];
+        args.layerDecoder=[5+1,20,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
@@ -84,10 +84,10 @@ switch choice
         save(args_name,'args');
     case 2
         load(args_name);
-        args.maxecho=100;
-        args.circletimes=100;
+        args.maxecho=1000;
+        args.circletimes=10;
 %         args.momentum=0.9;
-        args.learningrate=1e-1;
+        args.learningrate=1e-2;
 %         args.limit=1e-2/args.learningrate;
         args.batchsize=20;
         [args]=ae_train(args);
@@ -125,12 +125,12 @@ disp(strcat('args.Mom.WeightEncoder:',num2str(findMaxGradient(args.WeightEncoder
 disp(strcat('args.Mom.WeightStatic:',num2str(findMaxGradient(args.WeightStatic))));
 disp(strcat('args.Mom.WeightDecoder:',num2str(findMaxGradient(args.WeightDecoder))));
 figure;
-plot((1:length(args.Er))*100,args.Er);
+plot((1:length(args.Er)),args.Er);
 title('error line');
 xlabel('iterator times');
 ylabel('error');
 
-i1=1;
+i1=2;
 % data=test_data(i1);
 % label=test_label(i1);
 data=train_data(i1);
