@@ -19,7 +19,7 @@ train_data=generateBatches(hotWindPress(1:train_len,:),batchSize,timeStep,timeLe
 test_data=generateBatches(hotWindPress(train_len+1:end,:),1,timeStep,timeLen);
 
 args_name='args_ae.mat';
-choice=1;
+choice=2;
 switch choice
     case 1%初始化
         args.maxecho=1e4;
@@ -37,11 +37,11 @@ switch choice
     case 2%继续运算
         load(args_name);
         args.maxecho=100;
-        args.circletimes=100;
+%         args.circletimes=100;
 %         args.momentum=0.5;
 %         args.learningrate=5e-2;
-        args.batchsize=3;
-        [args]=fsc_train(args);
+%         args.batchsize=3;
+        [args]=ae_train(args,1);
         save(args_name,'args');
     case 3%梯度检验
         load(args_name);

@@ -52,7 +52,7 @@ dataTrain=hotWindPress(1:train_len,:);
 dataTest=hotWindPress(1+train_len:test_len+train_len,:);
 %}
 rng(11);
-lenInput=20;
+lenInput=11;
 L=10;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
@@ -77,16 +77,16 @@ args_name='args_ae.mat';
 choice=2;
 switch choice
     case 1
-        args.maxecho=12;
+        args.maxecho=10;
         args.circletimes=10;
         args.momentum=0.9;
         args.weightDecay=0;
         args.learningrate=1e-1;
         args.batchsize=8;
 %         args.limit=1;
-        args.layerEncoder=[1,10,5];
-        args.layerStatic=[5 10];
-        args.layerDecoder=[5+1,10,1];
+        args.layerEncoder=[1,10,10];
+        args.layerStatic=[10 10];
+        args.layerDecoder=[10+1,10,1];
         args.Er=[];
         args.outputLayer='tanh';
         args=ae_initial(args);
@@ -112,13 +112,13 @@ switch choice
         train_data=train_data(1);
         train_label=train_label(1);
         [args]=ae_train(args);
-        vname='args.WeightDecoder.w_o';
+        vname='args.WeightEncoder.r_i';
         loc='(end,end)';
         vname=vname(6:end);
         s1=strcat('dcal=args.Mom.',vname,loc,';');
         eval(s1);
     %     dcal=args.Mom.WeightPredict{1, 1}.w_i(1,1);
-        error_delta=1e-15/dcal;%1e-5;%
+        error_delta=1e-13/dcal;%1e-5;%
         s2=strcat('args.',vname,loc,'=args.',vname,loc,'+error_delta;');
         eval(s2);
     %     args.WeightPredict{1, 1}.w_i(1,1)=args.WeightPredict{1, 1}.w_i(1,1)+error_delta;
@@ -130,7 +130,7 @@ switch choice
         dreal=(error1-error2)/error_delta/2;
         accuracy=abs((dcal-dreal)/dreal);
 end
-
+%{
 disp(strcat('args.Mom.WeightEncoder:',num2str(findMaxGradient(args.WeightEncoder))));
 disp(strcat('args.Mom.WeightStatic:',num2str(findMaxGradient(args.WeightStatic))));
 disp(strcat('args.Mom.WeightDecoder:',num2str(findMaxGradient(args.WeightDecoder))));
@@ -140,7 +140,7 @@ title('error line');
 xlabel('iterator times');
 ylabel('error');
 
-i1=2;
+i1=1;
 % data=test_data(i1);
 % label=test_label(i1);
 data=train_data(i1);

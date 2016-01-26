@@ -1,9 +1,9 @@
 function args=ae_weight_update(args,adw)
 %% 权重衰减
-tdw.WeightEncoder=weight_decay(args.WeightEncoder,args.Mom.WeightEncoder,args.momentum,args.weightDecay);
-tdw.WeightStatic.w_c=args.momentum*args.Mom.WeightStatic.w_c+args.weightDecay*args.WeightStatic.w_c;
+tdw.WeightEncoder=weight_decay(args.Mom.WeightEncoder,args.momentum);
+tdw.WeightStatic.w_c=args.momentum*args.Mom.WeightStatic.w_c;
 tdw.WeightStatic.b_c=args.momentum*args.Mom.WeightStatic.b_c;
-tdw.WeightDecoder=weight_decay(args.WeightDecoder,args.Mom.WeightDecoder,args.momentum,args.weightDecay);
+tdw.WeightDecoder=weight_decay(args.Mom.WeightDecoder,args.momentum);
 %% 限制梯度
 % adw=clamp(adw,args.limit);
 %%  加权求和
@@ -65,17 +65,17 @@ W.p_o=W.p_o-lr*dW.p_o;
 W.w_k=W.w_k-lr*dW.w_k;
 W.b_k=W.b_k-lr*dW.b_k;
 
-function MW=weight_decay(W,MW,momentum,wd)
-MW.w_i=momentum*MW.w_i+wd*W.w_i;
-MW.r_i=momentum*MW.r_i+wd*W.r_i;
-MW.p_i=momentum*MW.p_i+wd*W.p_i;
-MW.w_f=momentum*MW.w_f+wd*W.w_f;
-MW.r_f=momentum*MW.r_f+wd*W.r_f;
-MW.p_f=momentum*MW.p_f+wd*W.p_f;
-MW.w_z=momentum*MW.w_z+wd*W.w_z;
-MW.r_z=momentum*MW.r_z+wd*W.r_z;
-MW.w_o=momentum*MW.w_o+wd*W.w_o;
-MW.r_o=momentum*MW.r_o+wd*W.r_o;
-MW.p_o=momentum*MW.p_o+wd*W.p_o;
-MW.w_k=momentum*MW.w_k+wd*W.w_k;
+function MW=weight_decay(MW,momentum)
+MW.w_i=momentum*MW.w_i;
+MW.r_i=momentum*MW.r_i;
+MW.p_i=momentum*MW.p_i;
+MW.w_f=momentum*MW.w_f;
+MW.r_f=momentum*MW.r_f;
+MW.p_f=momentum*MW.p_f;
+MW.w_z=momentum*MW.w_z;
+MW.r_z=momentum*MW.r_z;
+MW.w_o=momentum*MW.w_o;
+MW.r_o=momentum*MW.r_o;
+MW.p_o=momentum*MW.p_o;
+MW.w_k=momentum*MW.w_k;
 MW.b_k=momentum*MW.b_k;
