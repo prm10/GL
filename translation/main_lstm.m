@@ -28,7 +28,8 @@ else
     args.maxecho=10;
     args.circletimes=10;
     args.momentum=0.9;
-    args.learningrate=1e-5;
+    args.learningrate=1e-1;
+    args.batchsize=10;
     % args.predictLength=1000;
     dimC=10;
     dimInput=1;
