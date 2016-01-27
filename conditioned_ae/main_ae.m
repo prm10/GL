@@ -20,9 +20,9 @@ Sh=S(i3);
 T=size(hotWindPress,1);
 hotWindPress=(hotWindPress-ones(T,1)*Mh)./(ones(T,1)*Sh);
 dHWP=hotWindPress(2:end,:)-hotWindPress(1:end-1,:);
-dHWP=[0;dHWP/std(dHWP)];
-dHWP=max(dHWP,-ones(size(dHWP)));
-dHWP=min(dHWP,ones(size(dHWP)));
+dHWP=[0;dHWP/std(dHWP)/2];
+dHWP=max(dHWP,-0.9*ones(size(dHWP)));
+dHWP=min(dHWP,0.9*ones(size(dHWP)));
 % hotWindPress=smooth(hotWindPress);
 %{
 figure;
@@ -40,11 +40,13 @@ train_label=cell(0);
 
 train_len=ceil(size(hotWindPress,1)/2);
 test_len=size(hotWindPress,1)-train_len;
+% dataTrain=hotWindPress(1:train_len,:);
+% dataTest=hotWindPress(1+train_len:test_len+train_len,:);
 dataTrain=dHWP(1:train_len,:);
 dataTest=dHWP(1+train_len:test_len+train_len,:);
 rng(11);
-lenInput=6*60;
-L=6*30;
+lenInput=200;
+L=50;
 num=1000;
 index=floor(rand(num,1)*(train_len-lenInput));
 for i1=1:num
@@ -84,10 +86,10 @@ switch choice
         save(args_name,'args');
     case 2
         load(args_name);
-        args.maxecho=100;
+        args.maxecho=10;
         args.circletimes=100;
-%         args.momentum=0.9;
-        args.learningrate=1e-1;
+        args.momentum=0.9;
+        args.learningrate=1e-3;
 %         args.limit=1e-2/args.learningrate;
         args.batchsize=8;
         [args]=ae_train(args);
@@ -137,7 +139,7 @@ L=size(label{1},1);
 [predict,error2]=ae_ff(data,label,args);
 
 figure;
-plot(1:T,data{1},'b',T-1:-1:T-L,label{1},'r.',T-1:-1:T-L,predict,'g--');
+plot(1:T,data{1},'b',T-1:-1:T-L,label{1},'r.',T-1:-1:T-L,predict,'g*');
 %}
 
 %{

@@ -20,7 +20,7 @@ function [args]=ae_train(args)
         end
        
         [~,error]=ae_ff(test_data,test_label,args);
-        fprintf('echo: %d \t test error: %.6f\n',i1,error);
+        fprintf('echo: %d \t test error: %.6f\n',i1,error*1e4);
         args.Er=[args.Er;error];
     end
     close(h);
