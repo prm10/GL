@@ -86,7 +86,7 @@ switch choice
         save(args_name,'args');
     case 2
         load(args_name);
-        args.maxecho=10;
+        args.maxecho=50;
         args.circletimes=100;
         args.momentum=0.9;
         args.learningrate=1e-3;
