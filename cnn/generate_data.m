@@ -44,6 +44,7 @@ for i1=1:6
     title(commenVar{ipt(i1)});
 end
 %}
+%% 
 minWidth=360*24*3;
 index=normalArea(normalState,minWidth);
 ind=2;
