@@ -11,6 +11,9 @@ s=25.2e4;
 data0=data0(s:end,commenDim{GL(i1)});
 date0=date0(s:end,:);
 sv=sv(s:end,:);
+% È¥³ı»»Â¯ÈÅ¶¯
+data0=data0(~sv,:);
+date0=date0(~sv,:);
 
 % ddata0=data0(2:end,:)-data0(1:end-1,:);
 % plot(date0);
@@ -63,12 +66,13 @@ end
 % low_filter(data1(range,ipt(4)))
 
 %% get data and target
-len_win=6*20;
+len_cnn=360*5;% dataset cover over 5 hours
+len_win=6*30;% target predict next 30 minutes
 data_seg=data1(range,:);
 data2=zeros(size(data_seg));
 for i1=1:size(data_seg,1)-len_win
-%     data2(i1,:)=std(data1(i1:i1+len_win-1,:),0,1);
-    data2(i1,:)=median(data_seg(i1:i1+len_win-1,:));
+    data2(i1,:)=std(data_seg(i1:i1+len_win-1,:),0,1);
+%     data2(i1,:)=median(data_seg(i1:i1+len_win-1,:));
 end
 figure;
 for i1=1:6
