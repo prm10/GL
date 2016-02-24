@@ -2,7 +2,7 @@
 clc;close all;clear;
 No=[2,3,5];
 GL=[7,1,5];
-ipt=[7;8;13;17;20;24];
+ipt=[7;8;13;17;20;4];
 plotvariable;
 i1=2;%¸ßÂ¯±àºÅ
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
@@ -13,8 +13,8 @@ data0=data0(s:end,commenDim{GL(i1)});
 date0=date0(s:end,:);
 sv=sv(s:end,:);
 % È¥³ý»»Â¯ÈÅ¶¯
-data0=data0(~sv,:);
-date0=date0(~sv,:);
+% data0=data0(~sv,:);
+% date0=date0(~sv,:);
 
 % ddata0=data0(2:end,:)-data0(1:end-1,:);
 % plot(date0);
@@ -52,28 +52,29 @@ for i1=1:6
 end
 %}
 
-%
+%{
 %% find one sample and then plot
 minWidth=360*24*3;
 [index,ignore]=normalArea(normalState,minWidth);
 ind=3;
-sIndex=index(ind,1);
-eIndex=index(ind,2);
-ig=ignore{ind};
-range=sIndex:eIndex;
-figure;%yua
-for i1=1:6
-    subplot(3,2,i1);
-    hold on;
-    plot(data1(range,ipt(i1)),'.');%1e4:end
-    plot(ig,data1(range(ig),ipt(i1)),'r*')
-    title(commenVar{ipt(i1)});
-end
+% for ind=1:size(index,1)
+    sIndex=index(ind,1);
+    eIndex=index(ind,2);
+    ig=ignore{ind};
+    range=sIndex:eIndex;
+    figure('name',strcat('index: ',num2str(ind)));%yua
+    for i1=1:6
+        subplot(3,2,i1);
+        hold on;
+        plot(data1(range,ipt(i1)));%1e4:end
+        plot(ig,data1(range(ig),ipt(i1)),'r.')
+        title(commenVar{ipt(i1)});
+    end
 % low_filter(data1(range,ipt(4)))
-
+% end
 %% get data and target
 len_data=360*5;% dataset cover over 5 hours
-len_target=6*10;% target predict next 30 minutes
+len_target=6*20;% target predict next 20 minutes
 data_seg=data1(range,:);% concerned data
 % sv_seg=sv(range,:);% stove change records of concerned data
 target_std=zeros(size(data_seg,1)-len_data-len_target,size(data_seg,2));
@@ -86,21 +87,24 @@ end
 figure;
 for i1=1:6
     subplot(3,2,i1);
-    plot(target_mean(:,ipt(i1)),'.');%1e4:end    
+    plot(target_std(:,ipt(i1)));%1e4:end    
     title(commenVar{ipt(i1)});
 end
 %}
 %% 
-%{
+%
 minWidth=360*24*3;% minimal normal state zone
-index=normalArea(normalState,minWidth);
+[index,ignore]=normalArea(normalState,minWidth);
 len_data=360*5;% dataset cover over 5 hours
 len_target=6*60;% target predict next 30 minutes
 csvPath='../../GL_data/cnn/';
 for ind=1:size(index,1)
     ind
     range=index(ind,1):index(ind,2);
-    data_seg=data1(range,:);% concerned data
+    ig=ignore{ind};
+    a=true(size(range));
+    a(ig)=false;
+    data_seg=data1(range(a),:);% concerned data
     csvName=num2str(ind);
     data2csv(data_seg,len_data,len_target,csvPath,csvName)
 end
