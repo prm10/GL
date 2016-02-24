@@ -52,25 +52,28 @@ for i1=1:6
 end
 %}
 
-%{
+%
 %% find one sample and then plot
 minWidth=360*24*3;
-index=normalArea(normalState,minWidth);
-ind=1;
+[index,ignore]=normalArea(normalState,minWidth);
+ind=3;
 sIndex=index(ind,1);
 eIndex=index(ind,2);
+ig=ignore{ind};
 range=sIndex:eIndex;
-figure;
+figure;%yua
 for i1=1:6
     subplot(3,2,i1);
-    plot(data1(range,ipt(i1)));%1e4:end
+    hold on;
+    plot(data1(range,ipt(i1)),'.');%1e4:end
+    plot(ig,data1(range(ig),ipt(i1)),'r*')
     title(commenVar{ipt(i1)});
 end
 % low_filter(data1(range,ipt(4)))
 
 %% get data and target
 len_data=360*5;% dataset cover over 5 hours
-len_target=6*60;% target predict next 30 minutes
+len_target=6*10;% target predict next 30 minutes
 data_seg=data1(range,:);% concerned data
 % sv_seg=sv(range,:);% stove change records of concerned data
 target_std=zeros(size(data_seg,1)-len_data-len_target,size(data_seg,2));
@@ -83,11 +86,12 @@ end
 figure;
 for i1=1:6
     subplot(3,2,i1);
-    plot(target_mean(:,ipt(i1)),'.');%1e4:end
+    plot(target_mean(:,ipt(i1)),'.');%1e4:end    
     title(commenVar{ipt(i1)});
 end
 %}
 %% 
+%{
 minWidth=360*24*3;% minimal normal state zone
 index=normalArea(normalState,minWidth);
 len_data=360*5;% dataset cover over 5 hours
@@ -100,4 +104,4 @@ for ind=1:size(index,1)
     csvName=num2str(ind);
     data2csv(data_seg,len_data,len_target,csvPath,csvName)
 end
-
+%}
