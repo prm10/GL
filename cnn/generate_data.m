@@ -95,7 +95,7 @@ end
 %
 minWidth=360*24*3;% minimal normal state zone
 [index,ignore]=normalArea(normalState,minWidth);
-len_data=360*5;% dataset cover over 5 hours
+len_data=360*1;% dataset cover over 5 hours
 len_target=6*20;% target predict next 20 minutes
 csvPath='../../GL_data/cnn/';
 for ind=1:size(index,1)
