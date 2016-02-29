@@ -7,9 +7,9 @@ plotvariable;
 i1=2;%高炉编号
 
 opt=struct(...
-    'date_str_begin','2012-09-01', ... %开始时间
-    'date_str_end','2012-12-20', ...   %结束时间
-    'len',360*24*1, ...%计算PCA所用时长范围
+    'date_str_begin','2013-02-20', ... %开始时间
+    'date_str_end','2013-02-26', ...   %结束时间
+    'len',360*24*5, ...%计算PCA所用时长范围
     'step',360*1 ...
     );
 
@@ -71,7 +71,7 @@ for i1=1:length(loc)
     [P,E]=pca(trainset_st);
 %     pH(:,:,i1)=P;
 %     eH(:,i1)=E;
-    k=7;
+    k=12;
     F_a=4;
     [spe,t_2]=pca_indicater(data1_st,P,E,k);
     [spe2,t_22]=pca_indicater(testset_st,P,E,k);
@@ -83,12 +83,12 @@ for i1=1:length(loc)
     theta2=sum(E(k+1:end).^2);
     theta3=sum(E(k+1:end).^3);
     h0=1-2/3*theta1*theta3/theta2^2;
-    c_a=3;%2.58;
+    c_a=3.7;%2.58;
     spe_limit=theta1*(c_a*h0*sqrt(2*theta2)/theta1+1+theta2*h0*(h0-1)/theta1^2).^(1/h0);
     normal=(spe2<spe_limit)&(t_22<t2_limit);
     n2=sum(normal);
     if n2>0
-        trainset=[trainset(n2+1:end,:);testset(normal,:)];
+%         trainset=[trainset(n2+1:end,:);testset(normal,:)];
     end
     
     T2((t1:t2)-sIndex,1)=t_2;
@@ -131,23 +131,22 @@ plot(simi);
 %}
 %% 画统计量
 %
+T2=min(T2,400*ones(size(T2)));
+SPE=min(SPE,50*ones(size(SPE)));
+
 ns=normalState(sIndex+1:eIndex);
 sv1=sv(sIndex+1:eIndex);
-figure;
 T=size(T2,1);
 range1=(1:T)/360/24;
+figure;
 subplot(211);
-hold on;
-plot(range1(ns&~sv1),T2(ns&~sv1));
-plot(range1(ns&~sv1),T2_lim(ns&~sv1),'--');
+plot(range1,T2,range1,T2_lim,'--');
+% plot(range1(ns&~sv1),T2(ns&~sv1),range1(ns&~sv1),T2_lim(ns&~sv1),'--');
 title('t2');
-hold off;
 subplot(212);
-hold on;
-plot(range1(ns&~sv1),SPE(ns&~sv1));
-plot(range1(ns&~sv1),SPE_lim(ns&~sv1),'--');
+plot(range1,SPE,range1,SPE_lim,'--');
+% plot(range1(ns&~sv1),SPE(ns&~sv1),range1(ns&~sv1),SPE_lim(ns&~sv1),'--');
 title('spe');
-hold off;
 %}
 %{
 %% original data
