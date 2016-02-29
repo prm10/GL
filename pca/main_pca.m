@@ -2,73 +2,105 @@
 clc;close all;clear;
 No=[2,3,5];
 GL=[7,1,5];
-ipt=[1;8;13;17;20;24];
+ipt=[7;8;13;17;20;24];
 plotvariable;
 i1=2;%高炉编号
-%{
-load(strcat('data\',num2str(No(i1)),'\data_labeled.mat'));
-load(strcat('data\',num2str(No(i1)),'\sv.mat'));
-i2=1;%1:length(input0)
-data1=input0{i2}(:,commenDim{GL(i1)});
-M1=M(:,commenDim{GL(i1)});
-S1=S(:,commenDim{GL(i1)});
-%删除换炉中的data
-sv1=sv{i2};
-data1=data1(sv1==0,:);
-timeLen=360*1;
-T=size(data1,1)-timeLen;
-delay=60;
-%}
+
+opt=struct(...
+    'date_str_begin','2012-09-01', ... %开始时间
+    'date_str_end','2012-12-20', ...   %结束时间
+    'len',360*24*1, ...%计算PCA所用时长范围
+    'step',360*1 ...
+    );
+
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
-M1=mean(data0(~sv,commenDim{GL(i1)}));%除去换炉扰动
-S1=std(data0(~sv,commenDim{GL(i1)}),0,1);
-% '2013-01-15 23:43:11','2013-01-16 01:21:13','2'
-date_str_begin='2013-01-14';
-date_str_end='2013-01-17';
-dayLen=1;   %计算高炉的稳态工作点所用时长/h
-timeLen=360*1;  %计算PCA所用时长范围
-sIndex=find(date0>datenum(date_str_begin)-dayLen,1);  % start index
-trainIndex=find(date0>datenum(date_str_begin),1);     % train data start index
-eIndex=find(date0>datenum(date_str_end),1);           % end index
-T=eIndex-trainIndex;                                  % search data time
-data1=data0(sIndex:eIndex,commenDim{GL(i1)});         % get commen variable of train data
-sv1=sv(sIndex:eIndex,1);                              % stove change variable
-timeLen2=trainIndex-sIndex;%训练集起点
+data0=data0(:,commenDim{GL(i1)});% 选取共有变量
 
+%{
+17  热风压力<0.34
+8   冷风流量<20
+20  顶温东北>350
+7   富氧流量<5000
+%}
+normalState=...
+    data0(:,17)>0.32    ...
+    & data0(:,8)>20     ...
+    & data0(:,20)<450   ...
+    & data0(:,7)>2000;
+
+
+M0=mean(data0(~sv,:));%除去换炉扰动后的均值方差
+S0=std(data0(~sv,:),0,1);
+
+sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
+eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
+clear date0;
 disp('begin to calculate PCA');
-step=6;
-range=1:step:T;
-T=length(range);
+loc=opt.step:opt.step:(eIndex-sIndex);
+T=eIndex-sIndex;
 T2=zeros(T,1);
 SPE=zeros(T,1);
-numDims=size(data1,2);
-pH=zeros(numDims,numDims,T);
-eH=zeros(numDims,T);
-tic;
-for i1=1:length(range)
-    t1=range(i1)+timeLen2;
-%     range_avg=t1-timeLen2:t1-1;
-%     data2=data1(range_avg,:);%用于计算均值M、方差S
-%     sv2=sv1(range_avg,:);
-%     M2=mean(data2(~sv2,:));%除去换炉扰动
-%     S2=std(data2(~sv2,:),0,1);
+T2_lim=zeros(T,1);
+SPE_lim=zeros(T,1);
 
-    rang_pca=t1-timeLen:t1-1;
-    data2=data1(rang_pca,:);%data for PCA
-    sv2=sv1(rang_pca,:);
-    data2=data2(~sv2,:);%除去换炉扰动
-    data3=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S1);
-    [P,E]=pca(data3);
-    pH(:,:,i1)=P;
-    eH(:,i1)=E;
-    [T2(i1,1),SPE(i1,1)]=pca_indicater(data3(end,:),P,E,7);
+trainset=data0(sIndex-opt.len+1:sIndex,:);
+
+N=size(data0,2);
+% pH=zeros(N,N,T);
+% eH=zeros(N,T);
+tic;
+for i1=1:length(loc)
+    t1=sIndex+loc(i1)-opt.step+1;
+    t2=sIndex+loc(i1);
+    data1=data0(t1:t2,:);
+    ns=normalState(t1:t2,:);
+    sv1=sv(t1:t2,:);
+    testset=data1;         % no filter
+    
+    testset=testset(~sv1,:); % remove stove change
+    ns=ns(~sv1,:);      
+    
+    testset=testset(ns,:);     % filter abnormal state
+    
+    M1=mean(trainset);%除去换炉扰动
+    S1=std(trainset,0,1);
+    trainset_st=(trainset-ones(size(trainset,1),1)*M1)./(ones(size(trainset,1),1)*S1);
+    testset_st=(testset-ones(size(testset,1),1)*M1)./(ones(size(testset,1),1)*S1);
+    data1_st=(data1-ones(size(data1,1),1)*M1)./(ones(size(data1,1),1)*S1);
+    [P,E]=pca(trainset_st);
+%     pH(:,:,i1)=P;
+%     eH(:,i1)=E;
+    k=7;
+    F_a=4;
+    [spe,t_2]=pca_indicater(data1_st,P,E,k);
+    [spe2,t_22]=pca_indicater(testset_st,P,E,k);
+    if i1==13
+        i1;
+    end
+    t2_limit=(N-1)*(N+1)*k/N/(N-k)*F_a;
+    theta1=sum(E(k+1:end));
+    theta2=sum(E(k+1:end).^2);
+    theta3=sum(E(k+1:end).^3);
+    h0=1-2/3*theta1*theta3/theta2^2;
+    c_a=3;%2.58;
+    spe_limit=theta1*(c_a*h0*sqrt(2*theta2)/theta1+1+theta2*h0*(h0-1)/theta1^2).^(1/h0);
+    normal=(spe2<spe_limit)&(t_22<t2_limit);
+    n2=sum(normal);
+    if n2>0
+        trainset=[trainset(n2+1:end,:);testset(normal,:)];
+    end
+    
+    T2((t1:t2)-sIndex,1)=t_2;
+    SPE((t1:t2)-sIndex,1)=spe;
+    T2_lim((t1:t2)-sIndex,1)=t2_limit;
+    SPE_lim((t1:t2)-sIndex,1)=spe_limit;
 end
 toc;
 %% 矩阵相似度分析
 % p=pH(:,:,2000)/pH(:,:,1);
 % imshow(p/norm(p));
-%
+%{
 T=size(T2,1);
 range1=(1:T)*step/360/24;
 
@@ -98,17 +130,27 @@ figure;
 plot(simi);
 %}
 %% 画统计量
-%{
-% data3=(data1-ones(size(data1,1),1)*M2)./(ones(size(data1,1),1)*S2);
-% [T2,SPE]=pca_indicater(data3,P,te,7);
+%
+ns=normalState(sIndex+1:eIndex);
+sv1=sv(sIndex+1:eIndex);
 figure;
 T=size(T2,1);
-range1=(1:T)*step/360/24;
+range1=(1:T)/360/24;
 subplot(211);
-plot(range1,T2);
+hold on;
+plot(range1(ns&~sv1),T2(ns&~sv1));
+plot(range1(ns&~sv1),T2_lim(ns&~sv1),'--');
+title('t2');
+hold off;
 subplot(212);
-plot(range1,SPE);
+hold on;
+plot(range1(ns&~sv1),SPE(ns&~sv1));
+plot(range1(ns&~sv1),SPE_lim(ns&~sv1),'--');
+title('spe');
+hold off;
 %}
+%{
+%% original data
 figure;
 T=size(data1,1);
 range2=(1:T)/360/24;
@@ -117,4 +159,4 @@ for i1=1:6
     plot(range2,data1(:,ipt(i1)));
     title(commenVar{ipt(i1)});
 end
-
+%}
