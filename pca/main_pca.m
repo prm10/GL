@@ -46,6 +46,9 @@ SPE_lim=zeros(T,1);
 
 trainset=data0(sIndex-opt.len+1:sIndex,:);
 
+sv_train=sv(sIndex-opt.len+1:sIndex);
+trainset=trainset(~sv_train,:);
+
 N=size(data0,2);
 % pH=zeros(N,N,T);
 % eH=zeros(N,T);
@@ -58,10 +61,10 @@ for i1=1:length(loc)
     sv1=sv(t1:t2,:);
     testset=data1;         % no filter
     
-    testset=testset(~sv1,:); % remove stove change
-    ns=ns(~sv1,:);      
+%     testset=testset(~sv1,:); % remove stove change
+%     ns=ns(~sv1,:);      
     
-    testset=testset(ns,:);     % filter abnormal state
+%     testset=testset(ns,:);     % filter abnormal state
     
     M1=mean(trainset);%除去换炉扰动
     S1=std(trainset,0,1);
@@ -71,8 +74,8 @@ for i1=1:length(loc)
     [P,E]=pca(trainset_st);
 %     pH(:,:,i1)=P;
 %     eH(:,i1)=E;
-    k=12;
-    F_a=4;
+    k=11;
+    F_a=3;
     [spe,t_2]=pca_indicater(data1_st,P,E,k);
     [spe2,t_22]=pca_indicater(testset_st,P,E,k);
     if i1==13
@@ -131,8 +134,8 @@ plot(simi);
 %}
 %% 画统计量
 %
-T2=min(T2,400*ones(size(T2)));
-SPE=min(SPE,50*ones(size(SPE)));
+T2=min(T2,100*ones(size(T2)));
+SPE=min(SPE,20*ones(size(SPE)));
 
 ns=normalState(sIndex+1:eIndex);
 sv1=sv(sIndex+1:eIndex);

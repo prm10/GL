@@ -10,7 +10,7 @@ len_trainset=360*24;
 accu=1/10;
 opt=struct(...
     'date_str_begin','2012-09-01', ... %开始时间
-    'date_str_end','2012-12-20', ...   %结束时间
+    'date_str_end','2012-9-20', ...   %结束时间
     'len',len_trainset, ...%计算PCA所用时长范围
     'step',ceil(len_trainset*accu) ...
     );
