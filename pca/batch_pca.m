@@ -7,10 +7,10 @@ plotvariable;
 i1=2;%高炉编号
 
 len_trainset=360*24;
-accu=1/10;
+accu=1/20;
 opt=struct(...
-    'date_str_begin','2012-09-01', ... %开始时间
-    'date_str_end','2012-9-20', ...   %结束时间
+    'date_str_begin','2012-12-01', ... %开始时间
+    'date_str_end','2013-02-01', ...   %结束时间
     'len',len_trainset, ...%计算PCA所用时长范围
     'step',ceil(len_trainset*accu) ...
     );
@@ -37,12 +37,13 @@ S0=std(data0(~sv,:),0,1);
 
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);           % end index
-clear date0;
+% clear date0;
 disp('begin to calculate PCA');
 loc=0:opt.step:(eIndex-sIndex);
 T=length(loc);
 T2=zeros(T,1);
 SPE=zeros(T,1);
+D=zeros(T,1);
 numDims=size(data0,2);
 pH=zeros(numDims,numDims,T);
 eH=zeros(numDims,T);
@@ -51,20 +52,21 @@ for i1=1:length(loc)
     t1=sIndex+loc(i1)-opt.len+1;
     t2=sIndex+loc(i1);
     data1=data0(t1:t2,:);
+    D(i1)=date0(t2);
     ns=normalState(t1:t2,:);
     sv1=sv(t1:t2,:);
     data2=data1;         % no filter
     
-%     data2=data2(~sv1,:); % remove stove change
-%     ns=ns(~sv1,:);      
+    data2=data2(~sv1,:); % remove stove change
+    ns=ns(~sv1,:);      
     
     data2=data2(ns,:);     % filter abnormal state
     
-    if size(data2,1)/size(data1,1)<0.5
-        disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
-        disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
-        continue;
-    end
+%     if size(data2,1)/size(data1,1)<0.5
+%         disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
+%         disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
+%         continue;
+%     end
 
     M1=mean(data2);%除去换炉扰动
     S1=std(data2,0,1);
@@ -72,7 +74,7 @@ for i1=1:length(loc)
     [P,E]=pca(data_st);
     pH(:,:,i1)=P;
     eH(:,i1)=E;
-    [T2(i1,1),SPE(i1,1)]=pca_indicater(data_st(end,:),P,E,7);
+    [T2(i1,1),SPE(i1,1)]=pca_indicater(data_st(end,:),P,E,3);
 end
 toc;
 clear data0;
@@ -84,15 +86,34 @@ tic;
 n=size(pH,3);
 sim=zeros(n,n);
 for i1=1:n
-    for i2=1:n
-        sim(i1,i2)=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
+    for i2=i1:n
+%         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
+        result=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),3);
+        sim(i1,i2)=result;
+        sim(i2,i1)=result;
     end
 end
 toc;
 % imshow(sim/max(max(sim)));
+sim(1,end)=0;
+figure;
 imagesc(sim);
-axis equal;
-axis([.5,n+.5,.5,n+.5])
+% axis equal;
+axis([.5,n+.5,.5,n+.5]);
+
+% place=[445,450,455,460];
+% for i1=place
+%     figure;
+%     hist(sim(i1,:),20);
+% end
+
+mean_sim=mean(sim);
+figure;
+% subplot(211);
+% plot(median(sim));
+% subplot(212);
+plot(mean_sim);
+datestr(D(463))
 %% 
 %{
 day=63;
