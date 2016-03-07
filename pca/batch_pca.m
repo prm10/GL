@@ -6,8 +6,8 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 i1=2;%高炉编号
 
-len_trainset=360*24;
-accu=1/20;
+len_trainset=360*12;
+accu=1/24;
 opt=struct(...
     'date_str_begin','2012-12-01', ... %开始时间
     'date_str_end','2013-02-01', ...   %结束时间
@@ -36,7 +36,7 @@ M0=mean(data0(~sv,:));%除去换炉扰动后的均值方差
 S0=std(data0(~sv,:),0,1);
 
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
-eIndex=find(date0>datenum(opt.date_str_end),1);           % end index
+eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
 % clear date0;
 disp('begin to calculate PCA');
 loc=0:opt.step:(eIndex-sIndex);
@@ -62,11 +62,11 @@ for i1=1:length(loc)
     
     data2=data2(ns,:);     % filter abnormal state
     
-%     if size(data2,1)/size(data1,1)<0.5
+    if size(data2,1)/size(data1,1)<0.5
 %         disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
 %         disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
-%         continue;
-%     end
+        continue;
+    end
 
     M1=mean(data2);%除去换炉扰动
     S1=std(data2,0,1);
@@ -77,7 +77,7 @@ for i1=1:length(loc)
     [T2(i1,1),SPE(i1,1)]=pca_indicater(data_st(end,:),P,E,3);
 end
 toc;
-clear data0;
+clear data0 date0;
 %% 矩阵相似度分析
 % p=pH(:,:,2000)/pH(:,:,1);
 % imshow(p/norm(p));
@@ -98,22 +98,46 @@ toc;
 sim(1,end)=0;
 figure;
 imagesc(sim);
-% axis equal;
+axis equal;
 axis([.5,n+.5,.5,n+.5]);
 
+%% 特征分析
 % place=[445,450,455,460];
 % for i1=place
 %     figure;
 %     hist(sim(i1,:),20);
 % end
 
-mean_sim=mean(sim);
+% data_sim=sim(:,2500);
+% [p,ci]=betafit(min(data_sim,0.99*ones(size(data_sim))),0.01);
+% x=0:1e-3:1;
+% figure;
+% hold on;
+% hist(data_sim,200);
+% plot(x,size(data_sim,1)/200*x.^(p(1)-1).*(1-x).^(p(2)-1)./beta(p(1),p(2)));
+
+% mean_sim=mean(sim);
+% figure;
+% % subplot(211);
+% % plot(median(sim));
+% % subplot(212);
+% plot(mean_sim,'-*');
+% datestr(D(2240))
+
+%% Beta分布参数估计
+sIndex=find(D>datenum('2013-01-23'),1);  % start index
+eIndex=find(D>datenum('2013-01-26'),1);  % end index
+p_beta=zeros(eIndex-sIndex+1,2);
+ci_beta=zeros(2*(eIndex-sIndex+1),2);
+for i1=1:eIndex-sIndex+1
+    data_sim=sim(:,i1+sIndex-1);
+    if mean(data_sim)<0.3
+        continue;
+    end
+    [p_beta(i1,:),ci_beta(2*i1-1:2*i1,:)]=betafit(min(data_sim,0.99*ones(size(data_sim))));
+end
 figure;
-% subplot(211);
-% plot(median(sim));
-% subplot(212);
-plot(mean_sim);
-datestr(D(463))
+plot(p_beta);
 %% 
 %{
 day=63;
