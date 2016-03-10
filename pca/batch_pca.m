@@ -6,10 +6,10 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 i1=2;%高炉编号
 
-len_trainset=360*12;
-accu=1/24;
+len_trainset=360*24;
+accu=1/24/6;
 opt=struct(...
-    'date_str_begin','2012-12-01', ... %开始时间
+    'date_str_begin','2013-01-01', ... %开始时间
     'date_str_end','2013-02-01', ...   %结束时间
     'len',len_trainset, ...%计算PCA所用时长范围
     'step',ceil(len_trainset*accu) ...
@@ -77,30 +77,34 @@ for i1=1:length(loc)
     [T2(i1,1),SPE(i1,1)]=pca_indicater(data_st(end,:),P,E,3);
 end
 toc;
-clear data0 date0;
+clear data0 date0 normalState sv;
 %% 矩阵相似度分析
-% p=pH(:,:,2000)/pH(:,:,1);
-% imshow(p/norm(p));
-%
+model=load('..\..\GL_data\pca_model.mat');
 tic;
+m=size(model.pH,3);
 n=size(pH,3);
-sim=zeros(n,n);
+sim=zeros(m,n);
 for i1=1:n
-    for i2=i1:n
-%         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
-        result=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),3);
-        sim(i1,i2)=result;
-        sim(i2,i1)=result;
-    end
+    result=simH(pH(:,:,i1),model.pH(:,:,:),eH(:,i1),eH(:,:));
+    sim(:,i1)=result;
 end
+
+% for i1=1:n
+%     for i2=i1:n
+%         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
+% %         result=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),3);
+%         sim(i1,i2)=result;
+%         sim(i2,i1)=result;
+%     end
+% end
 toc;
 % imshow(sim/max(max(sim)));
 sim(1,end)=0;
 figure;
 imagesc(sim);
-axis equal;
-axis([.5,n+.5,.5,n+.5]);
-
+% axis equal;
+% axis([.5,n+.5,.5,n+.5]);
+%}
 %% 特征分析
 % place=[445,450,455,460];
 % for i1=place
@@ -125,6 +129,7 @@ axis([.5,n+.5,.5,n+.5]);
 % datestr(D(2240))
 
 %% Beta分布参数估计
+%{
 sIndex=find(D>datenum('2013-01-23'),1);  % start index
 eIndex=find(D>datenum('2013-01-26'),1);  % end index
 p_beta=zeros(eIndex-sIndex+1,2);
@@ -138,6 +143,7 @@ for i1=1:eIndex-sIndex+1
 end
 figure;
 plot(p_beta);
+%}
 %% 
 %{
 day=63;
