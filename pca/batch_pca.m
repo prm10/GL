@@ -7,10 +7,10 @@ plotvariable;
 i1=2;%高炉编号
 
 len_trainset=360*24;
-accu=1/24/6;
+accu=1/24;
 opt=struct(...
-    'date_str_begin','2013-01-01', ... %开始时间
-    'date_str_end','2013-02-01', ...   %结束时间
+    'date_str_begin','2012-11-01', ... %开始时间
+    'date_str_end','2012-12-31', ...   %结束时间
     'len',len_trainset, ...%计算PCA所用时长范围
     'step',ceil(len_trainset*accu) ...
     );
@@ -77,34 +77,49 @@ for i1=1:length(loc)
     [T2(i1,1),SPE(i1,1)]=pca_indicater(data_st(end,:),P,E,3);
 end
 toc;
-clear data0 date0 normalState sv;
+clear data0 date0;
 %% 矩阵相似度分析
-model=load('..\..\GL_data\pca_model.mat');
+% p=pH(:,:,2000)/pH(:,:,1);
+% imshow(p/norm(p));
+%
 tic;
-m=size(model.pH,3);
 n=size(pH,3);
-sim=zeros(m,n);
+sim=zeros(n,n);
 for i1=1:n
-    result=simH(pH(:,:,i1),model.pH(:,:,:),eH(:,i1),eH(:,:));
-    sim(:,i1)=result;
-end
-
-% for i1=1:n
-%     for i2=i1:n
+    for i2=i1:n
 %         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
-% %         result=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),3);
-%         sim(i1,i2)=result;
-%         sim(i2,i1)=result;
-%     end
-% end
+        result=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),3);
+        sim(i1,i2)=result;
+        sim(i2,i1)=result;
+    end
+end
 toc;
-% imshow(sim/max(max(sim)));
-sim(1,end)=0;
+% sim(1,end)=0;
 figure;
 imagesc(sim);
-% axis equal;
-% axis([.5,n+.5,.5,n+.5]);
-%}
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
+save('..\..\GL_data\batch_pca.mat','sim','D');
+%% 聚类
+load('..\..\GL_data\batch_pca.mat');
+W=sim-diag(diag(sim));
+k=5;
+C = SpectralClustering(W, k);
+index=[];
+for i1=1:k
+    index=[index;find(C==i1)];
+end
+sim2=zeros(size(sim));
+for i1=1:size(sim,1)
+    for i2=1:size(sim,2)
+        sim2(i1,i2)=sim(index(i1),index(i2));
+    end
+end
+n=size(sim2,1);
+figure;
+imagesc(sim2);
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
 %% 特征分析
 % place=[445,450,455,460];
 % for i1=place
@@ -196,4 +211,3 @@ plot(range1,SPE);
 %     plot(range2,data1(:,ipt(i1)));
 %     title(commenVar{ipt(i1)});
 % end
-
