@@ -7,16 +7,18 @@ plotvariable;
 i1=2;%高炉编号
 
 opt=struct(...
-    'date_str_begin','2013-02-20', ... %开始时间
-    'date_str_end','2013-02-26', ...   %结束时间
-    'len',360*24*5, ...%计算PCA所用时长范围
+    'date_str_begin','2012-11-15', ... %开始时间
+    'date_str_end','2012-11-17', ...   %结束时间
+    'len',360*24*2, ...%计算PCA所用时长范围
     'step',360*1 ...
     );
 
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
 data0=data0(:,commenDim{GL(i1)});% 选取共有变量
-
+%
+% sv=(smooth(double(sv),30)>0.1);
+sv=false(size(sv));
 %{
 17  热风压力<0.34
 8   冷风流量<20
@@ -35,7 +37,6 @@ S0=std(data0(~sv,:),0,1);
 
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
-clear date0;
 disp('begin to calculate PCA');
 loc=opt.step:opt.step:(eIndex-sIndex);
 T=eIndex-sIndex;
@@ -60,13 +61,14 @@ for i1=1:length(loc)
     ns=normalState(t1:t2,:);
     sv1=sv(t1:t2,:);
     testset=data1;         % no filter
+    date1=date0(t1:t2);
     
 %     testset=testset(~sv1,:); % remove stove change
 %     ns=ns(~sv1,:);      
     
 %     testset=testset(ns,:);     % filter abnormal state
     
-    M1=mean(trainset);%除去换炉扰动
+    M1=mean(trainset);%除去换炉扰动后的
     S1=std(trainset,0,1);
     trainset_st=(trainset-ones(size(trainset,1),1)*M1)./(ones(size(trainset,1),1)*S1);
     testset_st=(testset-ones(size(testset,1),1)*M1)./(ones(size(testset,1),1)*S1);
@@ -75,7 +77,7 @@ for i1=1:length(loc)
 %     pH(:,:,i1)=P;
 %     eH(:,i1)=E;
     k=11;
-    F_a=3;
+    F_a=2;
     [spe,t_2]=pca_indicater(data1_st,P,E,k);
     [spe2,t_22]=pca_indicater(testset_st,P,E,k);
     if i1==13
