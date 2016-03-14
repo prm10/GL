@@ -18,7 +18,7 @@ opt=struct(...
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
 data0=data0(:,commenDim{GL(i1)});% 选取共有变量
-
+sv=false(size(sv));
 %{
 17  热风压力<0.34
 8   冷风流量<20
@@ -57,8 +57,8 @@ for i1=1:length(loc)
     sv1=sv(t1:t2,:);
     data2=data1;         % no filter
     
-    data2=data2(~sv1,:); % remove stove change
-    ns=ns(~sv1,:);      
+%     data2=data2(~sv1,:); % remove stove change
+%     ns=ns(~sv1,:);      
     
     data2=data2(ns,:);     % filter abnormal state
     
@@ -68,7 +68,7 @@ for i1=1:length(loc)
         continue;
     end
 
-    M1=mean(data2);%除去换炉扰动
+    M1=mean(data2);
     S1=std(data2,0,1);
     data_st=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S1);
     [P,E]=pca(data_st);
@@ -88,7 +88,8 @@ sim=zeros(n,n);
 for i1=1:n
     for i2=i1:n
 %         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
-        result=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),3);
+        [result,eig1]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),5);
+        result=eig1(5);
         sim(i1,i2)=result;
         sim(i2,i1)=result;
     end
