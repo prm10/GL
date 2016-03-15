@@ -6,8 +6,8 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 i1=2;%高炉编号
 
-len_trainset=360*24;
-accu=1/24;
+len_trainset=360*12;
+accu=1/5;
 opt=struct(...
     'date_str_begin','2012-11-01', ... %开始时间
     'date_str_end','2012-12-31', ...   %结束时间
@@ -63,8 +63,8 @@ for i1=1:length(loc)
     data2=data2(ns,:);     % filter abnormal state
     
     if size(data2,1)/size(data1,1)<0.5
-%         disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
-%         disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
+        disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
+        disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
         continue;
     end
 
@@ -79,22 +79,25 @@ end
 toc;
 clear data0 date0;
 %% 矩阵相似度分析
-% p=pH(:,:,2000)/pH(:,:,1);
-% imshow(p/norm(p));
-%
 tic;
 n=size(pH,3);
 sim=zeros(n,n);
 for i1=1:n
     for i2=i1:n
 %         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
-        [result,eig1]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),5);
-        result=eig1(5);
+        e1=eH(:,i1);
+        e2=eH(:,i2);
+        if(sum(e1)==0 || sum(e2)==0)
+            continue;
+        end
+        [result,eig1]=simG(pH(:,:,i1),pH(:,:,i2),e1,e2,5);
+        result=eig1(1);
         sim(i1,i2)=result;
         sim(i2,i1)=result;
     end
 end
 toc;
+sim=real(sim);
 % sim(1,end)=0;
 figure;
 imagesc(sim);
