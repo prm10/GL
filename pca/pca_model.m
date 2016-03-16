@@ -7,10 +7,10 @@ plotvariable;
 i1=2;%高炉编号
 
 hours=24;
-minutes=30;
+minutes=60;
 opt=struct(...
-    'date_str_begin','2012-08-01', ... %开始时间
-    'date_str_end','2013-03-01', ...   %结束时间
+    'date_str_begin','2012-09-01', ... %开始时间
+    'date_str_end','2013-01-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );
@@ -91,6 +91,7 @@ D=D(1:end-ignore);
 save(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'),'pH','eH','D');
 %}
 %% similarity
+%{
 load(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'));
 tic;
 n=size(pH,3);
@@ -111,13 +112,40 @@ end
 toc;
 % sim(1,end)=0;
 figure;
-imagesc(sim(:,:,1));
+imagesc(sim(:,:,4));
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
 save(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'),'sim');
+%}
 %% 计算均值方差
 %
 load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
+k=size(sim,3);
 sim=reshape(sim,[],k);
-M0=mean(sim);
-S0=std(sim,0,1);
+M_sim=mean(sim);
+S_sim=std(sim,0,1);
+%}
+%% 聚类
+load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
+for i1=1:k
+    sim(:,:,i1)=(sim(:,:,i1)-M_sim(i1))/S_sim(i1);
+end
+sim=mean(sim,3);
+W=sim-diag(diag(sim));
+k=10;
+C = SpectralClustering(W, k);
+index=[];
+for i1=1:k
+    index=[index;find(C==i1)];
+end
+sim2=zeros(size(sim));
+for i1=1:size(sim,1)
+    for i2=1:size(sim,2)
+        sim2(i1,i2)=sim(index(i1),index(i2));
+    end
+end
+n=size(sim2,1);
+figure;
+imagesc(sim2);
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
