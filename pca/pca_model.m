@@ -15,6 +15,9 @@ opt=struct(...
     'step',6*minutes ...
     );
 
+%%
+%{
+
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
 % load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
 data0=data0(:,commenDim{GL(i1)});% 选取共有变量
@@ -86,18 +89,24 @@ pH=pH(:,:,1:end-ignore);
 eH=eH(:,1:end-ignore);
 D=D(1:end-ignore);
 save(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'),'pH','eH','D');
+%}
 %% similarity
+load(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'));
 tic;
 n=size(pH,3);
-k=7;
+k=5;
 sim=zeros(n,n,k);
-for i1=1:n
-    for i2=i1:n
+for i1=1:n-1
+    i1
+    for i2=i1+1:n
 %         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
         [~,eig1]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
         sim(i1,i2,:)=eig1;
         sim(i2,i1,:)=eig1;
     end
+end
+for i1=1:n
+    sim(i1,i1,:)=1;
 end
 toc;
 % sim(1,end)=0;
@@ -106,3 +115,9 @@ imagesc(sim(:,:,1));
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
 save(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'),'sim');
+%% 计算均值方差
+%
+load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
+sim=reshape(sim,[],k);
+M0=mean(sim);
+S0=std(sim,0,1);
