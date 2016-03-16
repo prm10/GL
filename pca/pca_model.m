@@ -118,7 +118,7 @@ axis([.5,n+.5,.5,n+.5]);
 save(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'),'sim');
 %}
 %% 计算均值方差
-%
+%{
 load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
 k=size(sim,3);
 sim=reshape(sim,[],k);
@@ -127,16 +127,35 @@ S_sim=std(sim,0,1);
 %}
 %% 聚类
 load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
+%{
+%各个角度取平均
 for i1=1:k
     sim(:,:,i1)=(sim(:,:,i1)-M_sim(i1))/S_sim(i1);
 end
 sim=mean(sim,3);
+
+%}
+%
+%取单个角度
+sim=sim(:,:,5);
+
+sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
+n=size(sim,1);
+figure;
+imagesc(sim);
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
+%%
+
 W=sim-diag(diag(sim));
-k=10;
+k=4;
 C = SpectralClustering(W, k);
+sta=zeros(k,1);
 index=[];
 for i1=1:k
-    index=[index;find(C==i1)];
+    a=find(C==i1);
+    index=[index;a];
+    sta(i1)=length(a);
 end
 sim2=zeros(size(sim));
 for i1=1:size(sim,1)

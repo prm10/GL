@@ -7,7 +7,7 @@ plotvariable;
 i1=2;%高炉编号
 
 len_trainset=360*12;
-accu=1/5;
+accu=1/12;
 opt=struct(...
     'date_str_begin','2012-11-01', ... %开始时间
     'date_str_end','2012-12-31', ...   %结束时间
