@@ -4,8 +4,8 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[7;8;13;17;20;24];
 plotvariable;
-i1=2;%高炉编号
-
+gl_no=2;%高炉编号
+filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 hours=24;
 minutes=60;
 opt=struct(...
@@ -17,10 +17,9 @@ opt=struct(...
 
 %%
 %{
-
-load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
-% load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
-data0=data0(:,commenDim{GL(i1)});% 选取共有变量
+load(strcat(filepath,'data.mat'));
+% load(strcat('..\..\GL_data\',num2str(No(gl_no)),'\sv.mat'));
+data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
 % sv=false(size(sv));%不去除换炉扰动
 %{
 17  热风压力<0.34
@@ -67,7 +66,7 @@ for i1=1:length(loc)
     
     data2=data2(ns,:);     % filter abnormal state
     
-    if size(data1,1)-size(data2,1)>360
+    if size(data1,1)-size(data2,1)>60
 %         disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
 %         disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
         ignore=ignore+1;
@@ -88,17 +87,18 @@ clear data0 date0;
 pH=pH(:,:,1:end-ignore);
 eH=eH(:,1:end-ignore);
 D=D(1:end-ignore);
-save(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'),'pH','eH','D');
+disp(strcat('sample ignored: ',num2str(ignore)));
+disp(strcat('model generated: ',num2str(length(D))));
+save(strcat(filepath,'pca_model_',num2str(hours),'.mat'),'pH','eH','D');
 %}
 %% similarity
 %{
-load(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'));
+load(strcat(filepath,'pca_model_',num2str(hours),'.mat'));
 tic;
 n=size(pH,3);
 k=5;
 sim=zeros(n,n,k);
 for i1=1:n-1
-    i1
     for i2=i1+1:n
 %         [~,result]=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
         [~,result]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
@@ -122,11 +122,11 @@ k=size(sim,3);
 sim2=reshape(sim,[],k);
 M_sim=mean(sim2);
 S_sim=std(sim2,0,1);
-save(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'),'sim','M_sim','S_sim');
+save(strcat(filepath,'sim_',num2str(hours),'.mat'),'sim','M_sim','S_sim');
 %}
 %% 聚类
-load(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'));
-load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
+load(strcat(filepath,'pca_model_',num2str(hours),'.mat'));
+load(strcat(filepath,'sim_',num2str(hours),'.mat'));
 %{
 %各个角度取平均
 for i1=1:k
@@ -146,17 +146,41 @@ imagesc(sim);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
 %%
-
 W=sim-diag(diag(sim));
-k=4;
-C = SpectralClustering(W, k);
+k=100;
+[C,dis]=SpectralClustering(W,k);
 sta=zeros(k,1);
-index=[];
+
+ind_c=cell(0);
 for i1=1:k
     a=find(C==i1);
-    index=[index;a];
+    ind_c{i1}=a;
     sta(i1)=length(a);
 end
+
+%按距离给类别排序
+[~,c_sort]=min(sum(dis));
+while length(c_sort)<k
+    %计算某类与所有c_sort类中距离均值
+    dis1=zeros(k,1);
+    for i1=1:k
+        for i2=1:length(c_sort)
+            dis1(i1,1)=dis1(i1,1)+dis(i1,c_sort(i2));
+        end
+    end
+    [~,ind_min]=sort(dis1);
+    for i1=1:k
+        if isempty(find(c_sort==ind_min(i1), 1))
+            c_sort=[c_sort;ind_min(i1)];
+            break;
+        end
+    end
+end
+index=[];
+for i1=1:k
+    index=[index;ind_c{c_sort(i1)}];
+end
+
 sim2=zeros(size(sim));
 for i1=1:size(sim,1)
     for i2=1:size(sim,2)
