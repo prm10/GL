@@ -100,10 +100,10 @@ sim=zeros(n,n,k);
 for i1=1:n-1
     i1
     for i2=i1+1:n
-%         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
-        [~,eig1]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
-        sim(i1,i2,:)=eig1;
-        sim(i2,i1,:)=eig1;
+%         [~,result]=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+        [~,result]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+        sim(i1,i2,:)=result;
+        sim(i2,i1,:)=result;
     end
 end
 for i1=1:n
@@ -111,21 +111,21 @@ for i1=1:n
 end
 toc;
 % sim(1,end)=0;
-figure;
-imagesc(sim(:,:,4));
-axis equal;
-axis([.5,n+.5,.5,n+.5]);
-save(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'),'sim');
-%}
-%% 计算均值方差
-%{
-load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
+% figure;
+% imagesc(sim(:,:,4));
+% axis equal;
+% axis([.5,n+.5,.5,n+.5]);
+
+% 计算均值方差
+%
 k=size(sim,3);
-sim=reshape(sim,[],k);
-M_sim=mean(sim);
-S_sim=std(sim,0,1);
+sim2=reshape(sim,[],k);
+M_sim=mean(sim2);
+S_sim=std(sim2,0,1);
+save(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'),'sim','M_sim','S_sim');
 %}
 %% 聚类
+load(strcat('..\..\GL_data\pca_model_',num2str(hours),'.mat'));
 load(strcat('..\..\GL_data\sim_',num2str(hours),'.mat'));
 %{
 %各个角度取平均
@@ -137,7 +137,7 @@ sim=mean(sim,3);
 %}
 %
 %取单个角度
-sim=sim(:,:,5);
+sim=sim(:,:,2);
 
 sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
 n=size(sim,1);

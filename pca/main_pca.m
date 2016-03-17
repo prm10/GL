@@ -7,10 +7,10 @@ plotvariable;
 i1=2;%高炉编号
 
 opt=struct(...
-    'date_str_begin','2012-11-15', ... %开始时间
-    'date_str_end','2012-11-17', ...   %结束时间
-    'len',360*24*2, ...%计算PCA所用时长范围
-    'step',360*1 ...
+    'date_str_begin','2012-11-14', ... %开始时间
+    'date_str_end','2012-11-30', ...   %结束时间
+    'len',360*24*4, ...%计算PCA所用时长范围
+    'step',360*24 ...
     );
 
 load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
