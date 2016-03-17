@@ -192,3 +192,9 @@ figure;
 imagesc(sim2);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
+%% ¼ÇÂ¼·Ö¼¶
+level=zeros(size(C));
+for i1=1:k
+    level(ind_c{c_sort(i1)})=i1;
+end
+save(strcat(filepath,'level_',num2str(hours),'.mat'),'level');

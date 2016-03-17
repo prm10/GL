@@ -4,23 +4,23 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[7;8;13;17;20;24];
 plotvariable;
-i1=1;%高炉编号
-
+gl_no=2;%高炉编号
+filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 % 'date_str_begin','2013-01-22', ... %开始时间
 %     'date_str_end','2013-01-25 10:00:00', ...   %结束时间
 
 hours=5;
 minutes=10;
 opt=struct(...
-    'date_str_begin','2014-01-01', ... %开始时间
-    'date_str_end','2014/1/5 19:38:57', ...   %结束时间
+    'date_str_begin','2013-01-22', ... %开始时间
+    'date_str_end','2013-01-25 09:54:05', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );
 
-load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
+load(strcat(filepath,'data.mat'));
 
-data0=data0(:,commenDim{GL(i1)});% 选取共有变量
+data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
 
 %{
 17  热风压力<0.34
@@ -74,7 +74,13 @@ end
 toc;
 clear data0 date0 normalState sv;
 %% 矩阵相似度分析
-model=load('..\..\GL_data\pca_model_24.mat');
+model=load(strcat(filepath,'pca_model_24.mat'));
+load(strcat(filepath,'level_24.mat'));
+level_limit=50;
+a=level<=level_limit;
+model.pH=model.pH(:,:,a);
+model.eH=model.eH(:,a);
+model.D=model.D(a);
 tic;
 m=size(model.pH,3);
 n=size(pH,3);
