@@ -79,6 +79,7 @@ clear data0 date0;
 %}
 %% ¾ØÕóÏàËÆ¶È·ÖÎö
 %
+disp('begin to calculate similarity');
 tic;
 n=size(pH,3);
 sim=zeros(n,n);
