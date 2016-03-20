@@ -4,7 +4,8 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[7;8;13;17;20;24];
 plotvariable;
-i1=2;%高炉编号
+gl_no=2;%高炉编号
+filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 
 len_trainset=360*12;
 accu=1/12;
@@ -15,10 +16,10 @@ opt=struct(...
     'step',ceil(len_trainset*accu) ...
     );
 
-load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
-load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
-data0=data0(:,commenDim{GL(i1)});% 选取共有变量
-sv=false(size(sv));
+load(strcat(filepath,'data.mat'));
+data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
+% load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
+% sv=false(size(sv));
 %{
 17  热风压力<0.34
 8   冷风流量<20

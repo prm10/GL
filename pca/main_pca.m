@@ -4,21 +4,21 @@ No=[2,3,5];
 GL=[7,1,5];
 ipt=[7;8;13;17;20;24];
 plotvariable;
-i1=2;%高炉编号
+gl_no=2;%高炉编号
+filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 
 opt=struct(...
     'date_str_begin','2012-11-14', ... %开始时间
     'date_str_end','2012-11-30', ...   %结束时间
-    'len',360*24*4, ...%计算PCA所用时长范围
-    'step',360*24 ...
+    'len',360*24*2, ...%计算PCA所用时长范围
+    'step',360*1 ...
     );
 
-load(strcat('..\..\GL_data\',num2str(No(i1)),'\data.mat'));
-load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
-data0=data0(:,commenDim{GL(i1)});% 选取共有变量
-%
+load(strcat(filepath,'data.mat'));
+data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
+% load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
 % sv=(smooth(double(sv),30)>0.1);
-sv=false(size(sv));
+% sv=false(size(sv));
 %{
 17  热风压力<0.34
 8   冷风流量<20
@@ -31,9 +31,8 @@ normalState=...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
 
-
-M0=mean(data0(~sv,:));%除去换炉扰动后的均值方差
-S0=std(data0(~sv,:),0,1);
+% M0=mean(data0(~sv,:));%除去换炉扰动后的均值方差
+% S0=std(data0(~sv,:),0,1);
 
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
@@ -47,8 +46,8 @@ SPE_lim=zeros(T,1);
 
 trainset=data0(sIndex-opt.len+1:sIndex,:);
 
-sv_train=sv(sIndex-opt.len+1:sIndex);
-trainset=trainset(~sv_train,:);
+% sv_train=sv(sIndex-opt.len+1:sIndex);
+% trainset=trainset(~sv_train,:);
 
 N=size(data0,2);
 % pH=zeros(N,N,T);
@@ -59,7 +58,7 @@ for i1=1:length(loc)
     t2=sIndex+loc(i1);
     data1=data0(t1:t2,:);
     ns=normalState(t1:t2,:);
-    sv1=sv(t1:t2,:);
+%     sv1=sv(t1:t2,:);
     testset=data1;         % no filter
     date1=date0(t1:t2);
     
@@ -68,7 +67,7 @@ for i1=1:length(loc)
     
 %     testset=testset(ns,:);     % filter abnormal state
     
-    M1=mean(trainset);%除去换炉扰动后的
+    M1=mean(trainset);
     S1=std(trainset,0,1);
     trainset_st=(trainset-ones(size(trainset,1),1)*M1)./(ones(size(trainset,1),1)*S1);
     testset_st=(testset-ones(size(testset,1),1)*M1)./(ones(size(testset,1),1)*S1);
@@ -90,10 +89,10 @@ for i1=1:length(loc)
     h0=1-2/3*theta1*theta3/theta2^2;
     c_a=3.7;%2.58;
     spe_limit=theta1*(c_a*h0*sqrt(2*theta2)/theta1+1+theta2*h0*(h0-1)/theta1^2).^(1/h0);
-    normal=(spe2<spe_limit)&(t_22<t2_limit);
+    normal=(spe2<spe_limit*2/3)&(t_22<t2_limit*2/3);
     n2=sum(normal);
     if n2>0
-%         trainset=[trainset(n2+1:end,:);testset(normal,:)];
+        trainset=[trainset(n2+1:end,:);testset(normal,:)];
     end
     
     T2((t1:t2)-sIndex,1)=t_2;
@@ -136,11 +135,11 @@ plot(simi);
 %}
 %% 画统计量
 %
-T2=min(T2,100*ones(size(T2)));
-SPE=min(SPE,20*ones(size(SPE)));
+T2=min(T2,5*max(T2_lim)*ones(size(T2)));
+SPE=min(SPE,5*max(SPE_lim)*ones(size(SPE)));
 
 ns=normalState(sIndex+1:eIndex);
-sv1=sv(sIndex+1:eIndex);
+% sv1=sv(sIndex+1:eIndex);
 T=size(T2,1);
 range1=(1:T)/360/24;
 figure;
