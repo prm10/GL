@@ -6,14 +6,13 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-
-len_trainset=360*12;
-accu=1/12;
+hours=24;
+minutes=10;
 opt=struct(...
-    'date_str_begin','2012-11-01', ... %开始时间
-    'date_str_end','2012-12-31', ...   %结束时间
-    'len',len_trainset, ...%计算PCA所用时长范围
-    'step',ceil(len_trainset*accu) ...
+    'date_str_begin','2012-10-01', ... %开始时间
+    'date_str_end','2012-10-21', ...   %结束时间
+    'len',360*hours, ...%计算PCA所用时长范围
+    'step',6*minutes ...
     );
 
 load(strcat(filepath,'data.mat'));
@@ -32,12 +31,10 @@ normalState=...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
 
-
-M0=mean(data0(~sv,:));%除去换炉扰动后的均值方差
-S0=std(data0(~sv,:),0,1);
-
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
+%% pca
+%
 % clear date0;
 disp('begin to calculate PCA');
 loc=0:opt.step:(eIndex-sIndex);
@@ -55,7 +52,7 @@ for i1=1:length(loc)
     data1=data0(t1:t2,:);
     D(i1)=date0(t2);
     ns=normalState(t1:t2,:);
-    sv1=sv(t1:t2,:);
+%     sv1=sv(t1:t2,:);
     data2=data1;         % no filter
     
 %     data2=data2(~sv1,:); % remove stove change
@@ -79,32 +76,38 @@ for i1=1:length(loc)
 end
 toc;
 clear data0 date0;
+%}
 %% 矩阵相似度分析
+%
 tic;
 n=size(pH,3);
 sim=zeros(n,n);
 for i1=1:n
-    for i2=i1:n
-%         result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2));
-        e1=eH(:,i1);
-        e2=eH(:,i2);
-        if(sum(e1)==0 || sum(e2)==0)
-            continue;
-        end
-        [result,eig1]=simG(pH(:,:,i1),pH(:,:,i2),e1,e2,5);
-        result=eig1(1);
+    for i2=i1+1:n
+        result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),5);
         sim(i1,i2)=result;
         sim(i2,i1)=result;
+        
+%         e1=eH(:,i1);
+%         e2=eH(:,i2);
+%         if(sum(e1)==0 || sum(e2)==0)
+%             continue;
+%         end
+%         [~,result]=simG(pH(:,:,i1),pH(:,:,i2),e1,e2,5);
+%         sim(i1,i2)=result(2);
+%         sim(i2,i1)=result(2);
     end
 end
 toc;
-sim=real(sim);
-% sim(1,end)=0;
+for i1=1:n
+    sim(i1,i1,:)=1;
+end
 figure;
 imagesc(sim);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
 save('..\..\GL_data\batch_pca.mat','sim','D');
+%}
 %% 聚类
 load('..\..\GL_data\batch_pca.mat');
 W=sim-diag(diag(sim));
