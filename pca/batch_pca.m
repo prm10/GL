@@ -7,10 +7,10 @@ plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 hours=24;
-minutes=10;
+minutes=60;
 opt=struct(...
-    'date_str_begin','2012-10-01', ... %开始时间
-    'date_str_end','2012-10-21', ...   %结束时间
+    'date_str_begin','2012-09-01', ... %开始时间
+    'date_str_end','2013-01-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );
@@ -45,12 +45,12 @@ D=zeros(T,1);
 numDims=size(data0,2);
 pH=zeros(numDims,numDims,T);
 eH=zeros(numDims,T);
+ignore=0;
 tic;
 for i1=1:length(loc)
     t1=sIndex+loc(i1)-opt.len+1;
     t2=sIndex+loc(i1);
     data1=data0(t1:t2,:);
-    D(i1)=date0(t2);
     ns=normalState(t1:t2,:);
 %     sv1=sv(t1:t2,:);
     data2=data1;         % no filter
@@ -63,6 +63,7 @@ for i1=1:length(loc)
     if size(data2,1)/size(data1,1)<0.5
         disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
         disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
+        ignore=ignore+1;
         continue;
     end
 
@@ -70,12 +71,17 @@ for i1=1:length(loc)
     S1=std(data2,0,1);
     data_st=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S1);
     [P,E]=pca(data_st);
-    pH(:,:,i1)=P;
-    eH(:,i1)=E;
-    [T2(i1,1),SPE(i1,1)]=pca_indicater(data_st(end,:),P,E,3);
+    pH(:,:,i1-ignore)=P;
+    eH(:,i1-ignore)=E;
+    D(i1-ignore)=date0(t2);
 end
 toc;
 clear data0 date0;
+pH=pH(:,:,1:end-ignore);
+eH=eH(:,1:end-ignore);
+D=D(1:end-ignore);
+disp(strcat('samples ignored: ',num2str(ignore)));
+disp(strcat('models generated: ',num2str(length(D))));
 %}
 %% 矩阵相似度分析
 %
@@ -110,13 +116,17 @@ axis([.5,n+.5,.5,n+.5]);
 save('..\..\GL_data\batch_pca.mat','sim','D');
 %}
 %% 聚类
+%{
 load('..\..\GL_data\batch_pca.mat');
 W=sim-diag(diag(sim));
 k=5;
+sta=zeros(k,1);
 C = SpectralClustering(W, k);
 index=[];
 for i1=1:k
-    index=[index;find(C==i1)];
+    a=find(C==i1);
+    index=[index;a];
+    sta(i1)=length(a);
 end
 sim2=zeros(size(sim));
 for i1=1:size(sim,1)
@@ -129,6 +139,7 @@ figure;
 imagesc(sim2);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
+%}
 %% 特征分析
 % place=[445,450,455,460];
 % for i1=place

@@ -6,20 +6,17 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-% 'date_str_begin','2013-01-22', ... %开始时间
-%     'date_str_end','2013-01-25 10:00:00', ...   %结束时间
 
-hours=5;
-minutes=10;
+hours=3;
+minutes=1;
 opt=struct(...
-    'date_str_begin','2013-01-22', ... %开始时间
+    'date_str_begin','2013-01-23 00:37', ... %开始时间
     'date_str_end','2013-01-25 09:54:05', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );
 
 load(strcat(filepath,'data.mat'));
-
 data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
 
 %{
@@ -33,11 +30,10 @@ normalState=...
     & data0(:,8)>20     ...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
-
+%% pca
+disp('begin to calculate PCA');
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
-% clear date0;
-disp('begin to calculate PCA');
 loc=0:opt.step:(eIndex-sIndex);
 T=length(loc);
 % T2=zeros(T,1);
@@ -54,29 +50,20 @@ for i1=1:length(loc)
     D(i1)=date0(t2);
     ns=normalState(t1:t2,:);
     data2=data1;         % no filter   
-    
-%     data2=data2(ns,:);     % filter abnormal state
-    
-%     if size(data2,1)/size(data1,1)<0.5
-% %         disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
-% %         disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
-%         continue;
-%     end
-
     M1=mean(data2);
     S1=max(std(data2,0,1),1e-5*ones(1,size(data2,2)));
     data_st=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S1);
     [P,E]=pca(data_st);
     pH(:,:,i1)=P;
     eH(:,i1)=E;
-%     [T2(i1,1),SPE(i1,1)]=pca_indicater(data_st(end,:),P,E,3);
 end
 toc;
 clear data0 date0 normalState sv;
 %% 矩阵相似度分析
+disp('begin to calculate similarity');
 model=load(strcat(filepath,'pca_model_24.mat'));
 load(strcat(filepath,'level_24.mat'));
-level_limit=50;
+level_limit=100;%取排名靠前的模型
 a=level<=level_limit;
 model.pH=model.pH(:,:,a);
 model.eH=model.eH(:,a);
@@ -86,11 +73,6 @@ m=size(model.pH,3);
 n=size(pH,3);
 k=5;
 sim=zeros(m,n,k);
-% for i1=1:n
-%     result=simH(pH(:,:,i1),model.pH(:,:,:),eH(:,i1),eH(:,:));
-%     sim(:,i1)=result;
-% end
-
 for i1=1:m
     for i2=1:n
 %         [~,result]=simH(model.pH(:,:,i1),pH(:,:,i2),model.eH(:,i1),eH(:,i2),k);
@@ -99,22 +81,22 @@ for i1=1:m
     end
 end
 toc;
-% sim(1,end)=0;
 figure;
 imagesc(sim(:,:,1));
 % axis equal;
 % axis([.5,n+.5,.5,n+.5]);
 %}
-%% 看分布的差异
+%% 看均值、方差、密度分布的差异
 sta_m=zeros(n,k);
 sta_s=zeros(n,k);
-for i1=1:k
+t=(1:n)*opt.step/360/24;
+for i1=1:3
     sta_m(:,i1)=mean(sim(:,:,i1));
     sta_s(:,i1)=std(sim(:,:,i1));
     figure;
     subplot(211);
-    plot(sta_m(:,i1));
+    plot(t,sta_m(:,i1));
     subplot(212);
-    plot(sta_s(:,i1));
+    plot(t,sta_s(:,i1));
 end
 

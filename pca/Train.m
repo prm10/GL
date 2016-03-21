@@ -9,18 +9,16 @@ filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 hours=24;
 minutes=60;
 opt=struct(...
-    'date_str_begin','2012-09-01', ... %开始时间
+    'date_str_begin','2012-11-10', ... %开始时间
     'date_str_end','2013-01-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );
 
 %%
-%{
+%
 load(strcat(filepath,'data.mat'));
-% load(strcat('..\..\GL_data\',num2str(No(gl_no)),'\sv.mat'));
 data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
-% sv=false(size(sv));%不去除换炉扰动
 %{
 17  热风压力<0.34
 8   冷风流量<20
@@ -33,20 +31,12 @@ normalState=...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
 
-% M0=mean(data0(~sv,:));%除去换炉扰动后的均值方差
-% S0=std(data0(~sv,:),0,1);
-
-% M0=mean(data0);
-% S0=std(data0,0,1);
-
+%% pca
+disp('begin to calculate PCA');
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
-% clear date0;
-disp('begin to calculate PCA');
 loc=0:opt.step:(eIndex-sIndex);
 T=length(loc);
-% T2=zeros(T,1);
-% SPE=zeros(T,1);
 D=zeros(T,1);
 numDims=size(data0,2);
 pH=zeros(numDims,numDims,T);
@@ -58,12 +48,7 @@ for i1=1:length(loc)
     t2=sIndex+loc(i1);
     data1=data0(t1:t2,:);
     ns=normalState(t1:t2,:);
-%     sv1=sv(t1:t2,:);
-    data2=data1;         % no filter
-    
-%     data2=data2(~sv1,:); % remove stove change
-%     ns=ns(~sv1,:);      
-    
+    data2=data1;         % no filter    
     data2=data2(ns,:);     % filter abnormal state
     
     if size(data1,1)-size(data2,1)>60
@@ -87,12 +72,12 @@ clear data0 date0;
 pH=pH(:,:,1:end-ignore);
 eH=eH(:,1:end-ignore);
 D=D(1:end-ignore);
-disp(strcat('sample ignored: ',num2str(ignore)));
-disp(strcat('model generated: ',num2str(length(D))));
+disp(strcat('samples ignored: ',num2str(ignore)));
+disp(strcat('models generated: ',num2str(length(D))));
 save(strcat(filepath,'pca_model_',num2str(hours),'.mat'),'pH','eH','D');
 %}
 %% similarity
-%{
+%
 load(strcat(filepath,'pca_model_',num2str(hours),'.mat'));
 tic;
 n=size(pH,3);
@@ -110,12 +95,6 @@ for i1=1:n
     sim(i1,i1,:)=1;
 end
 toc;
-% sim(1,end)=0;
-% figure;
-% imagesc(sim(:,:,4));
-% axis equal;
-% axis([.5,n+.5,.5,n+.5]);
-
 % 计算均值方差
 %
 k=size(sim,3);
@@ -147,7 +126,7 @@ axis equal;
 axis([.5,n+.5,.5,n+.5]);
 %%
 W=sim-diag(diag(sim));
-k=100;
+k=100;%聚类个数
 [C,dis]=SpectralClustering(W,k);
 sta=zeros(k,1);
 
@@ -160,6 +139,7 @@ end
 
 %按距离给类别排序
 [~,c_sort]=min(sum(dis));
+% [~,c_sort]=max(sta);
 while length(c_sort)<k
     %计算某类与所有c_sort类中距离均值
     dis1=zeros(k,1);

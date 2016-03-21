@@ -8,9 +8,9 @@ gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 
 opt=struct(...
-    'date_str_begin','2012-11-14', ... %开始时间
-    'date_str_end','2012-11-30', ...   %结束时间
-    'len',360*24*2, ...%计算PCA所用时长范围
+    'date_str_begin','2013-01-25 00:37', ... %开始时间
+    'date_str_end','2013-01-25 09:54:05', ...   %结束时间
+    'len',360*24*3, ...%计算PCA所用时长范围
     'step',360*1 ...
     );
 
@@ -76,12 +76,12 @@ for i1=1:length(loc)
 %     pH(:,:,i1)=P;
 %     eH(:,i1)=E;
     k=11;
-    F_a=2;
     [spe,t_2]=pca_indicater(data1_st,P,E,k);
     [spe2,t_22]=pca_indicater(testset_st,P,E,k);
     if i1==13
         i1;
     end
+    F_a=2;
     t2_limit=(N-1)*(N+1)*k/N/(N-k)*F_a;
     theta1=sum(E(k+1:end));
     theta2=sum(E(k+1:end).^2);
@@ -92,7 +92,7 @@ for i1=1:length(loc)
     normal=(spe2<spe_limit*2/3)&(t_22<t2_limit*2/3);
     n2=sum(normal);
     if n2>0
-        trainset=[trainset(n2+1:end,:);testset(normal,:)];
+%         trainset=[trainset(n2+1:end,:);testset(normal,:)];
     end
     
     T2((t1:t2)-sIndex,1)=t_2;

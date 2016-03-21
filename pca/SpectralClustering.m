@@ -5,7 +5,6 @@ function [C,dis] = SpectralClustering(W, k)
     E = D^(-1/2)*W*D^(-1/2);  
     [Q, V] = eigs(E, k);  
     C = kmeans(Q, k);
-    index=cell(0);
     center=zeros(k);
     for i1=1:k
         center(:,i1)=mean(Q(C==i1,:));
