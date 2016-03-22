@@ -6,10 +6,10 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-hours=4;
-minutes=20;
+hours=2;
+minutes=60;
 opt=struct(...
-    'date_str_begin','2012-12-01', ... %开始时间
+    'date_str_begin','2012-09-01', ... %开始时间
     'date_str_end','2013-01-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
@@ -19,6 +19,10 @@ load(strcat(filepath,'data.mat'));
 data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
 % load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
 % sv=false(size(sv));
+
+%% pca
+%
+disp('begin to calculate PCA');
 %{
 17  热风压力<0.34
 8   冷风流量<20
@@ -30,13 +34,8 @@ normalState=...
     & data0(:,8)>20     ...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
-
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
-%% pca
-%
-% clear date0;
-disp('begin to calculate PCA');
 loc=0:opt.step:(eIndex-sIndex);
 T=length(loc);
 T2=zeros(T,1);
@@ -93,8 +92,8 @@ sim0=zeros(n,n);
 sim=zeros(n,n,k);
 for i1=1:n-1
     for i2=i1+1:n
-        [r1,result]=simN(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
-%         [r1,result]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+%         [r1,result]=simN(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+        [r1,result]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
         sim(i1,i2,:)=result;
         sim(i2,i1,:)=result;
         sim0(i1,i2)=r1;
@@ -110,6 +109,7 @@ save('..\..\GL_data\batch_pca.mat','sim','sim0','D');
 %}
 %% plot
 batch=load('..\..\GL_data\batch_pca.mat');
+% batch=load('..\..\GL_data\batch_pca_20121201_20130101_4h_20min_G.mat');
 %{
 %各个角度取平均
 for i1=1:k
@@ -126,7 +126,7 @@ axis([.5,n+.5,.5,n+.5]);
 %
 for i1=1:5
 %取单个角度
-sim=batch.sim(:,:,i1);
+sim=real(batch.sim(:,:,i1));
 
 sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
 n=size(sim,1);
