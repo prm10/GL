@@ -75,7 +75,7 @@ k=5;
 sim=zeros(m,n,k);
 for i1=1:m
     for i2=1:n
-%         [~,result]=simH(model.pH(:,:,i1),pH(:,:,i2),model.eH(:,i1),eH(:,i2),k);
+%         [~,result]=simN(model.pH(:,:,i1),pH(:,:,i2),model.eH(:,i1),eH(:,i2),k);
         [~,result]=simG(model.pH(:,:,i1),pH(:,:,i2),model.eH(:,i1),eH(:,i2),k);
         sim(i1,i2,:)=result;
     end

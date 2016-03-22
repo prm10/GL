@@ -6,10 +6,10 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-hours=24;
-minutes=60;
+hours=4;
+minutes=20;
 opt=struct(...
-    'date_str_begin','2012-09-01', ... %开始时间
+    'date_str_begin','2012-12-01', ... %开始时间
     'date_str_end','2013-01-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
@@ -88,33 +88,53 @@ disp(strcat('models generated: ',num2str(length(D))));
 disp('begin to calculate similarity');
 tic;
 n=size(pH,3);
-sim=zeros(n,n);
-for i1=1:n
+k=5;
+sim0=zeros(n,n);
+sim=zeros(n,n,k);
+for i1=1:n-1
     for i2=i1+1:n
-        result=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),5);
-        sim(i1,i2)=result;
-        sim(i2,i1)=result;
-        
-%         e1=eH(:,i1);
-%         e2=eH(:,i2);
-%         if(sum(e1)==0 || sum(e2)==0)
-%             continue;
-%         end
-%         [~,result]=simG(pH(:,:,i1),pH(:,:,i2),e1,e2,5);
-%         sim(i1,i2)=result(2);
-%         sim(i2,i1)=result(2);
+        [r1,result]=simN(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+%         [r1,result]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+        sim(i1,i2,:)=result;
+        sim(i2,i1,:)=result;
+        sim0(i1,i2)=r1;
+        sim0(i2,i1)=r1;
     end
 end
-toc;
 for i1=1:n
     sim(i1,i1,:)=1;
+    sim0(i1,i1)=1;
 end
+toc;
+save('..\..\GL_data\batch_pca.mat','sim','sim0','D');
+%}
+%% plot
+batch=load('..\..\GL_data\batch_pca.mat');
+%{
+%各个角度取平均
+for i1=1:k
+    sim(:,:,i1)=(sim(:,:,i1)-M_sim(i1))/S_sim(i1);
+end
+sim=mean(sim,3);
+
+%}
+n=size(batch.sim0,1);
+figure;
+imagesc(batch.sim0);
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
+%
+for i1=1:5
+%取单个角度
+sim=batch.sim(:,:,i1);
+
+sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
+n=size(sim,1);
 figure;
 imagesc(sim);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
-save('..\..\GL_data\batch_pca.mat','sim','D');
-%}
+end
 %% 聚类
 %{
 load('..\..\GL_data\batch_pca.mat');

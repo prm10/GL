@@ -6,7 +6,7 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-hours=24;
+hours=6;
 minutes=60;
 opt=struct(...
     'date_str_begin','2012-11-10', ... %开始时间
@@ -85,7 +85,7 @@ k=5;
 sim=zeros(n,n,k);
 for i1=1:n-1
     for i2=i1+1:n
-%         [~,result]=simH(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+%         [~,result]=simN(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
         [~,result]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
         sim(i1,i2,:)=result;
         sim(i2,i1,:)=result;
