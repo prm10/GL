@@ -6,11 +6,11 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-hours=2;
-minutes=60;
+hours=24;
+minutes=120;
 opt=struct(...
     'date_str_begin','2012-09-01', ... %开始时间
-    'date_str_end','2013-01-01', ...   %结束时间
+    'date_str_end','2013-03-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );

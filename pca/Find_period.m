@@ -31,13 +31,16 @@ end
 %% 提取日期
 dv=datevec(batch.D);
 duan=1:length(dv);
-% duan=3215:4423;
+% duan=1215:3423;
 % duan=2000:3200;
 th=dv(duan,4);
 tm=dv(duan,5);
 % sim0=batch.sim0(duan,duan);
-sim0=batch.sim(duan,duan,4);
-sim_mean=mean(sim0);
+sim=batch.sim(duan,duan,1);
+m_sim=mean(sim(:));
+s_sim=std(sim(:));
+sim=(sim-m_sim)/s_sim;%标准化
+sim_mean=mean(sim);
 %以小时为间隔
 simh=zeros(24,1);
 for i1=1:24
@@ -45,5 +48,11 @@ for i1=1:24
 end
 figure;
 plot(0:23,simh,'-*');
-%以分钟为间隔
-simm=zeros(24*6);
+%以10分钟为间隔
+% t=floor(tm/10)+th*6;
+% simm=zeros(24*6,1);
+% for i1=1:24*6
+%     simm(i1,1)=median(sim_mean(t==i1-1));
+% end
+% figure;
+% plot(0:1/6:24-1/6,simm,'-*');
