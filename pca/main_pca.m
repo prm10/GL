@@ -8,9 +8,9 @@ gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 
 opt=struct(...
-    'date_str_begin','2013-01-25 00:37', ... %开始时间
-    'date_str_end','2013-01-25 09:54:05', ...   %结束时间
-    'len',360*24*3, ...%计算PCA所用时长范围
+    'date_str_begin','2012-09-01', ... %开始时间
+    'date_str_end','2012-01-17', ...   %结束时间
+    'len',360*24*2, ...%计算PCA所用时长范围
     'step',360*1 ...
     );
 
@@ -38,11 +38,12 @@ sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
 disp('begin to calculate PCA');
 loc=opt.step:opt.step:(eIndex-sIndex);
-T=eIndex-sIndex;
+T=eIndex-sIndex;% from eIndex to sIndex
 T2=zeros(T,1);
 SPE=zeros(T,1);
 T2_lim=zeros(T,1);
 SPE_lim=zeros(T,1);
+abnormal=false(T,1);
 
 trainset=data0(sIndex-opt.len+1:sIndex,:);
 
@@ -89,12 +90,13 @@ for i1=1:length(loc)
     h0=1-2/3*theta1*theta3/theta2^2;
     c_a=3.7;%2.58;
     spe_limit=theta1*(c_a*h0*sqrt(2*theta2)/theta1+1+theta2*h0*(h0-1)/theta1^2).^(1/h0);
-    normal=(spe2<spe_limit*2/3)&(t_22<t2_limit*2/3);
+    rate=0.8;
+    normal=(spe2<spe_limit*rate)&(t_22<t2_limit*rate);
     n2=sum(normal);
     if n2>0
-%         trainset=[trainset(n2+1:end,:);testset(normal,:)];
+        trainset=[trainset(n2+1:end,:);testset(normal,:)];
     end
-    
+    abnormal((t1:t2)-sIndex,1)=~normal;
     T2((t1:t2)-sIndex,1)=t_2;
     SPE((t1:t2)-sIndex,1)=spe;
     T2_lim((t1:t2)-sIndex,1)=t2_limit;
@@ -145,6 +147,7 @@ range1=(1:T)/360/24;
 figure;
 subplot(211);
 plot(range1,T2,range1,T2_lim,'--');
+% plot(range1,T2,range1(abnormal),T2(abnormal),'.',range1,T2_lim,'--');
 % plot(range1(ns&~sv1),T2(ns&~sv1),range1(ns&~sv1),T2_lim(ns&~sv1),'--');
 title('t2');
 subplot(212);

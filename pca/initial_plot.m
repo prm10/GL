@@ -6,8 +6,8 @@ plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 opt=struct(...
-    'date_str_begin','2013-01-23 00:37', ... %开始时间
-    'date_str_end','2013-01-25 09:54:05' ...   %结束时间
+    'date_str_begin','2012-09-01', ... %开始时间
+    'date_str_end','2013-01-01' ...   %结束时间
     );
 load(strcat(filepath,'data.mat'));
 data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
