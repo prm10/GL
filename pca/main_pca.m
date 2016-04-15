@@ -8,9 +8,9 @@ gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 
 opt=struct(...
-    'date_str_begin','2012-09-01', ... %开始时间
-    'date_str_end','2012-01-17', ...   %结束时间
-    'len',360*24*2, ...%计算PCA所用时长范围
+    'date_str_begin','2012-03-22 16:25', ... %开始时间
+    'date_str_end','2012-03-23 13:05:10', ...   %结束时间
+    'len',360*24*1, ...%计算PCA所用时长范围
     'step',360*1 ...
     );
 
@@ -76,7 +76,7 @@ for i1=1:length(loc)
     [P,E]=pca(trainset_st);
 %     pH(:,:,i1)=P;
 %     eH(:,i1)=E;
-    k=11;
+    k=7;
     [spe,t_2]=pca_indicater(data1_st,P,E,k);
     [spe2,t_22]=pca_indicater(testset_st,P,E,k);
     if i1==13
@@ -94,7 +94,7 @@ for i1=1:length(loc)
     normal=(spe2<spe_limit*rate)&(t_22<t2_limit*rate);
     n2=sum(normal);
     if n2>0
-        trainset=[trainset(n2+1:end,:);testset(normal,:)];
+%         trainset=[trainset(n2+1:end,:);testset(normal,:)];
     end
     abnormal((t1:t2)-sIndex,1)=~normal;
     T2((t1:t2)-sIndex,1)=t_2;
@@ -103,6 +103,7 @@ for i1=1:length(loc)
     SPE_lim((t1:t2)-sIndex,1)=spe_limit;
 end
 toc;
+
 %% 矩阵相似度分析
 % p=pH(:,:,2000)/pH(:,:,1);
 % imshow(p/norm(p));
@@ -143,7 +144,8 @@ SPE=min(SPE,5*max(SPE_lim)*ones(size(SPE)));
 ns=normalState(sIndex+1:eIndex);
 % sv1=sv(sIndex+1:eIndex);
 T=size(T2,1);
-range1=(1:T)/360/24;
+% range1=(1:T)/360/24;
+range1=(1:T);
 figure;
 subplot(211);
 plot(range1,T2,range1,T2_lim,'--');

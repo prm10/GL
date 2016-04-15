@@ -6,18 +6,22 @@ plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 opt=struct(...
-    'date_str_begin','2012-09-01', ... %开始时间
-    'date_str_end','2013-01-01' ...   %结束时间
+    'date_str_begin','2013-02-25', ... %开始时间
+    'date_str_end','2013-02-26 08:57:00', ...   %结束时间
+    'len',360*24*1, ...%计算PCA所用时长范围
+    'step',360*1 ...
     );
 load(strcat(filepath,'data.mat'));
 data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
-data1=data0(sIndex:eIndex,:);
+
 %% original data
+data1=data0(sIndex+1:eIndex,:);
 figure;
 T=size(data1,1);
-range2=(1:T)/360/24;
+% range2=(1:T)/360/24;
+range2=(1:T);
 for i1=1:6
     subplot(3,2,i1);
     plot(range2,data1(:,ipt(i1)));

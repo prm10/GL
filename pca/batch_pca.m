@@ -7,10 +7,10 @@ plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 hours=24;
-minutes=120;
+minutes=30;
 opt=struct(...
-    'date_str_begin','2012-09-01', ... %开始时间
-    'date_str_end','2013-03-01', ...   %结束时间
+    'date_str_begin','2012-03-21 16:25', ... %开始时间
+    'date_str_end','2012-03-23 13:05:10', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );
@@ -44,6 +44,8 @@ D=zeros(T,1);
 numDims=size(data0,2);
 pH=zeros(numDims,numDims,T);
 eH=zeros(numDims,T);
+M0=zeros(numDims,T);
+S0=zeros(numDims,T);
 ignore=0;
 tic;
 for i1=1:length(loc)
@@ -73,21 +75,39 @@ for i1=1:length(loc)
     pH(:,:,i1-ignore)=P;
     eH(:,i1-ignore)=E;
     D(i1-ignore)=date0(t2);
+    M0(:,i1-ignore)=M1;
+    S0(:,i1-ignore)=S1;
 end
 toc;
-clear data0 date0;
+
 pH=pH(:,:,1:end-ignore);
 eH=eH(:,1:end-ignore);
 D=D(1:end-ignore);
+M0=M0(:,1:end-ignore);
+S0=S0(:,1:end-ignore);
 disp(strcat('samples ignored: ',num2str(ignore)));
 disp(strcat('models generated: ',num2str(length(D))));
 %}
+%% original data
+%
+data1=data0(sIndex+1:eIndex,:);
+figure;
+T=size(data1,1);
+% range2=(1:T)/360/24;
+range2=(1:T);
+for i1=1:6
+    subplot(3,2,i1);
+    plot(range2,data1(:,ipt(i1)),(1:length(D))*opt.step,M0(ipt(i1),:),'*');
+    title(commenVar{ipt(i1)});
+end
+%}
 %% 矩阵相似度分析
 %
+clear data0 date0;
 disp('begin to calculate similarity');
 tic;
 n=size(pH,3);
-k=5;
+k=7;
 sim0=zeros(n,n);
 sim=zeros(n,n,k);
 for i1=1:n-1
@@ -124,7 +144,7 @@ imagesc(batch.sim0);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
 %
-for i1=1:5
+for i1=1:k
 %取单个角度
 sim=real(batch.sim(:,:,i1));
 
