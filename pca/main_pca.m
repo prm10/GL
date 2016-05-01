@@ -9,7 +9,7 @@ filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 
 opt=struct(...
     'date_str_begin','2012-03-22 16:25', ... %开始时间
-    'date_str_end','2012-03-23 13:05:10', ...   %结束时间
+    'date_str_end','2012-03-25 13:19:41', ...   %结束时间
     'len',360*24*1, ...%计算PCA所用时长范围
     'step',360*1 ...
     );
