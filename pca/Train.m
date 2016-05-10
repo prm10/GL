@@ -6,11 +6,11 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-hours=6;
+hours=24;
 minutes=60;
 opt=struct(...
-    'date_str_begin','2012-11-10', ... %开始时间
-    'date_str_end','2013-01-01', ...   %结束时间
+    'date_str_begin','2012-12-01', ... %开始时间
+    'date_str_end','2013-02-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes ...
     );
@@ -30,7 +30,7 @@ normalState=...
     & data0(:,8)>20     ...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
-
+S0=std(data0(normalState,:));
 %% pca
 disp('begin to calculate PCA');
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
@@ -60,7 +60,7 @@ for i1=1:length(loc)
 
     M1=mean(data2);
     S1=std(data2,0,1);
-    data_st=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S1);
+    data_st=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S0);
     [P,E]=pca(data_st);
     pH(:,:,i1-ignore)=P;
     eH(:,i1-ignore)=E;
@@ -103,7 +103,7 @@ M_sim=mean(sim2);
 S_sim=std(sim2,0,1);
 save(strcat(filepath,'sim_',num2str(hours),'.mat'),'sim','M_sim','S_sim');
 %}
-%% 聚类
+%% plot similarity
 load(strcat(filepath,'pca_model_',num2str(hours),'.mat'));
 load(strcat(filepath,'sim_',num2str(hours),'.mat'));
 %{
@@ -116,18 +116,23 @@ sim=mean(sim,3);
 %}
 %
 %取单个角度
-sim=sim(:,:,2);
-
-sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
+sim=sim(:,:,4);
+% %差分
+% sim=sim(:,1:end-1)-sim(:,2:end);
+% sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
+% sim2=sim./(ones(size(sim,1),1)*sum(sim));
+% [p,e]=eigs(sim2,1);
+figure;
+plot(p);
 n=size(sim,1);
 figure;
 imagesc(sim);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
-%%
+%% clustering
 W=sim-diag(diag(sim));
 k=100;%聚类个数
-[C,dis]=SpectralClustering(W,k);
+[C,dis]=spectralClustering(W,k);
 sta=zeros(k,1);
 
 ind_c=cell(0);

@@ -61,8 +61,8 @@ model_M=[];
 model_S=[];
 model_D=[];
 model_C=[];
-% nomal sample
 hours=2;
+% nomal sample
 minutes=30;
 for i1=1:size(normal_class,1)
     date_str_begin=normal_class{i1,1};
