@@ -6,8 +6,8 @@ plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 opt=struct(...
-    'date_str_begin','2013-01-16', ... %开始时间
-    'date_str_end','2013-01-16 18:19:10', ...   %结束时间
+    'date_str_begin','2012-03-16', ... %开始时间
+    'date_str_end','2013-03-16 18:19:10', ...   %结束时间
     'len',360*24*1, ...%计算PCA所用时长范围
     'step',360*1 ...
     );
@@ -18,12 +18,13 @@ eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
 % datestr(date0(sIndex+6123))
 %% original data
 data1=data0(sIndex+1:eIndex,:);
+date1=date0(sIndex+1:eIndex,:);
 figure;
 T=size(data1,1);
 % range2=(1:T)/360/24;
 range2=(1:T);
 for i1=1:6
     subplot(3,2,i1);
-    plot(range2,data1(:,ipt(i1)));
+    plot(date1,data1(:,ipt(i1)));
     title(commenVar{ipt(i1)});
 end

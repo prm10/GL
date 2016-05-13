@@ -6,20 +6,21 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-hours=24;
+window_hours=48;
+hours=2;
 minutes=30;
 opt=struct(...
-    'date_str_begin','2012-03-21 16:25', ... %开始时间
-    'date_str_end','2012-03-23 13:05:10', ...   %结束时间
+    'date_str_begin','2013-03-04', ... %开始时间
+    'date_str_end','2013-03-06 07:19:32', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
-    'step',6*minutes ...
+    'step',6*minutes, ...%步长
+    'window',max(window_hours,hours)*360 ...
     );
 
 load(strcat(filepath,'data.mat'));
 data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
 % load(strcat('..\..\GL_data\',num2str(No(i1)),'\sv.mat'));
 % sv=false(size(sv));
-
 %% pca
 %
 disp('begin to calculate PCA');
@@ -34,24 +35,31 @@ normalState=...
     & data0(:,8)>20     ...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
+S0=std(data0(normalState,:));
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
 loc=0:opt.step:(eIndex-sIndex);
 T=length(loc);
 T2=zeros(T,1);
 SPE=zeros(T,1);
-D=zeros(T,1);
 numDims=size(data0,2);
-pH=zeros(numDims,numDims,T);
-eH=zeros(numDims,T);
-M0=zeros(numDims,T);
-S0=zeros(numDims,T);
+model_P=zeros(numDims,numDims,T);
+model_E=zeros(numDims,T);
+model_M=zeros(numDims,T);
+model_S=zeros(numDims,T);
+model_D=zeros(T,1);
 ignore=0;
 tic;
 for i1=1:length(loc)
+    t_window=sIndex+loc(i1)-opt.window+1;
     t1=sIndex+loc(i1)-opt.len+1;
     t2=sIndex+loc(i1);
     data1=data0(t1:t2,:);
+    
+    data_window=data0(t_window:t2,:);
+    ns0=normalState(t_window:t2,:);
+    data_window=data_window(ns0,:);
+    M_window=mean(data_window);
     ns=normalState(t1:t2,:);
 %     sv1=sv(t1:t2,:);
     data2=data1;         % no filter
@@ -70,23 +78,23 @@ for i1=1:length(loc)
 
     M1=mean(data2);
     S1=std(data2,0,1);
-    data_st=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S1);
+    data_st=(data2-ones(size(data2,1),1)*M_window)./(ones(size(data2,1),1)*S0);
     [P,E]=pca(data_st);
-    pH(:,:,i1-ignore)=P;
-    eH(:,i1-ignore)=E;
-    D(i1-ignore)=date0(t2);
-    M0(:,i1-ignore)=M1;
-    S0(:,i1-ignore)=S1;
+    model_P(:,:,i1-ignore)=P;
+    model_E(:,i1-ignore)=E;
+    model_D(i1-ignore)=date0(t2);
+    model_M(:,i1-ignore)=M_window;
+    model_S(:,i1-ignore)=S1;
 end
 toc;
 
-pH=pH(:,:,1:end-ignore);
-eH=eH(:,1:end-ignore);
-D=D(1:end-ignore);
-M0=M0(:,1:end-ignore);
-S0=S0(:,1:end-ignore);
+model_P=model_P(:,:,1:end-ignore);
+model_E=model_E(:,1:end-ignore);
+model_D=model_D(1:end-ignore);
+model_M=model_M(:,1:end-ignore);
+model_S=model_S(:,1:end-ignore);
 disp(strcat('samples ignored: ',num2str(ignore)));
-disp(strcat('models generated: ',num2str(length(D))));
+disp(strcat('models generated: ',num2str(length(model_D))));
 %}
 %% original data
 %
@@ -97,7 +105,7 @@ T=size(data1,1);
 range2=(1:T);
 for i1=1:6
     subplot(3,2,i1);
-    plot(range2,data1(:,ipt(i1)),(1:length(D))*opt.step,M0(ipt(i1),:),'*');
+    plot(range2,data1(:,ipt(i1)),(1:length(model_D))*opt.step,model_M(ipt(i1),:),'--');
     title(commenVar{ipt(i1)});
 end
 %}
@@ -106,14 +114,14 @@ end
 clear data0 date0;
 disp('begin to calculate similarity');
 tic;
-n=size(pH,3);
-k=7;
+n=size(model_P,3);
+k=5;
 sim0=zeros(n,n);
 sim=zeros(n,n,k);
 for i1=1:n-1
     for i2=i1+1:n
 %         [r1,result]=simN(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
-        [r1,result]=simG(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
+        [r1,result]=simG(model_P(:,:,i1),model_P(:,:,i2),model_E(:,i1),model_E(:,i2),k);
         sim(i1,i2,:)=result;
         sim(i2,i1,:)=result;
         sim0(i1,i2)=r1;
@@ -125,7 +133,7 @@ for i1=1:n
     sim0(i1,i1)=1;
 end
 toc;
-save('..\..\GL_data\batch_pca.mat','sim','sim0','D');
+save('..\..\GL_data\batch_pca.mat','sim','sim0','model_D');
 %}
 %% plot
 batch=load('..\..\GL_data\batch_pca.mat');
@@ -138,23 +146,23 @@ end
 sim=mean(sim,3);
 
 %}
-n=size(batch.sim0,1);
-figure;
-imagesc(batch.sim0);
-axis equal;
-axis([.5,n+.5,.5,n+.5]);
-%
+
 for i1=1:k
 %取单个角度
 sim=real(batch.sim(:,:,i1));
-
-sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
+% sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
 n=size(sim,1);
 figure;
 imagesc(sim);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
 end
+
+n=size(batch.sim0,1);
+figure;
+imagesc(batch.sim0);
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
 %% 聚类
 %{
 load('..\..\GL_data\batch_pca.mat');
