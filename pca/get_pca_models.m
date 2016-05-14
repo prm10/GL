@@ -1,4 +1,4 @@
-function [P,E,M,S,D]=get_pca_models(data0,date0,len,step,S0)
+function [P,E,M,S,D]=get_pca_models(data0,date0,len,step,M0,S0)
 %{
  ‰»Î
 data0: (n0,m),n0=len+n*step
@@ -23,7 +23,7 @@ for i1=1:length(loc)
     data1=data0(t1:t2,:);
     M1=mean(data1);
     S1=std(data1,0,1);
-    data_st=(data1-ones(size(data1,1),1)*M1)./(ones(size(data1,1),1)*S0);
+    data_st=(data1-ones(size(data1,1),1)*M0)./(ones(size(data1,1),1)*S0);
     [p1,e1]=pca(data_st);
     P(:,:,i1)=p1;
     E(:,i1)=e1;

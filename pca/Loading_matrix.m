@@ -67,43 +67,41 @@ fault_class={
 num_case=size(normal_class,1);
 %% 对每段正常数据建立一个pca模型
 % nomal sample
-%{
-model_P=[];
-model_E=[];
-model_M=[];
-model_S=[];
-model_D=[];
-model_C=[];
+%
+model_P1=[];
+model_E1=[];
+model_M1=[];
+model_S1=[];
 for i1=1:size(normal_class,1)
     date_str_begin=normal_class{i1,1};
     date_str_end=normal_class{i1,2};
     sIndex=find(date0>datenum(date_str_begin),1);  % start index
     eIndex=find(date0>datenum(date_str_end),1);    % end index
-    len=360*hours; %计算PCA所用时长范围
-    step=6*minutes;
-    data1=data0(sIndex-len:eIndex,:);
-    date1=date0(sIndex-len:eIndex,:);
-    [P1,E1,M1,S1,D1]=get_pca_models(data1,date1,len,step,S0);
-    model_P=cat(3,model_P,P1);
-    model_E=cat(2,model_E,E1);
-    model_M=cat(2,model_M,M1);
-    model_S=cat(2,model_S,S1);
-    model_D=cat(1,model_D,D1);
-    model_C=cat(1,model_C,ones(size(D1)));
+    data1=data0(sIndex:eIndex,:);
+    date1=date0(sIndex:eIndex,:);
+    M1=mean(data1);
+    S1=std(data1,0,1);
+    data1_st=(data1-ones(size(data1,1),1)*M1)./(ones(size(data1,1),1)*S0);
+    [P1,E1]=pca(data1_st);
+    model_P1=cat(3,model_P1,P1);
+    model_E1=cat(2,model_E1,E1);
+    model_M1=cat(2,model_M1,M1');
+    model_S1=cat(2,model_S1,S1');
 end
 %}
 %% 对异常数据按窗口长度、步长等建立多个pca模型
-%{
+%
 %abnormal sample
-model_P=[];
-model_E=[];
-model_M=[];
-model_S=[];
-model_D=[];
-model_C=[];
-hours=2;
-minutes=1;
-fault_hours=1;
+model_P2=[];
+model_E2=[];
+model_M2=[];
+model_S2=[];
+model_D2=[];
+model_C2=[];
+model_A2=[];
+hours=0.5;
+minutes=60;
+fault_hours=3;
 for i1=1:size(fault_class,1)
     date_str_end=fault_class{i1,1};
     eIndex=find(date0>datenum(date_str_end),1);    % end index
@@ -112,20 +110,33 @@ for i1=1:size(fault_class,1)
     step=6*minutes;
     data1=data0(sIndex-len:eIndex,:);
     date1=date0(sIndex-len:eIndex,:);
-    [P1,E1,M1,S1,D1]=get_pca_models(data1,date1,len,step,S0);
-    model_P=cat(3,model_P,P1);
-    model_E=cat(2,model_E,E1);
-    model_M=cat(2,model_M,M1);
-    model_S=cat(2,model_S,S1);
-    model_D=cat(1,model_D,D1);
-    model_C=cat(1,model_C,str2num(fault_class{i1,2})*ones(size(D1)));
+    M0=model_M1(:,i1)';
+    [P1,E1,M1,S1,D1]=get_pca_models(data1,date1,len,step,M0,S0);
+    model_P2=cat(3,model_P2,P1);
+    model_E2=cat(2,model_E2,E1);
+    model_M2=cat(2,model_M2,M1);
+    model_S2=cat(2,model_S2,S1);
+    model_D2=cat(1,model_D2,D1);
+    model_C2=cat(1,model_C2,str2num(fault_class{i1,2})*ones(size(D1)));
+    for i2=1:size(P1,3)
+        model_A2=cat(3,model_A2,model_P1(:,:,i1)'*P1(:,:,i2));
+    end
 end
-sim0=calculate_sim(model_P,model_E,5);
 %}
+%显示转换矩阵的图像
+figure;
+for i1=1:size(model_A2,3)
+    subplot(size(model_A2,3)/num_case,num_case,i1);
+    imagesc(abs(model_A2(:,:,i1)));
+    title(fault_class{mod(i1-1,8)+1,2});
+end
 %% 计算相似度矩阵
+%{
+sim0=calculate_sim(model_P2,model_E2,5);
 sim=sim0(:,:,3);
 n=size(sim,1);
 figure;
 imagesc(sim);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
+%}
