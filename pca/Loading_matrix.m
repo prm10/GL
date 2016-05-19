@@ -48,7 +48,6 @@ normal_class={
     '2012-03-21 20:49','2012-03-22 16:25'
     '2013-01-14 07:24','2013-01-15 14:07'
     '2013-01-22 05:40','2013-01-25 00:37'
-    '2013-03-02 09:24','2013-03-06 03:43'
     '2012-03-21 20:49','2012-03-22 16:25'
     '2012-03-29 08:07','2012-03-30 03:43'
     '2013-02-12 23:23','2013-02-13 08:22'
@@ -58,7 +57,6 @@ fault_class={
     '2012-03-23 12:08:22','2'
     '2013-01-15 23:43:11','2'
     '2013-01-25 06:18:26','2'
-    '2013-03-06 07:19:32','2'
 	'2012-03-25 12:46:13','3'
     '2012-03-30 19:56:08','4'
     '2013-02-13 14:49:30','4'
@@ -99,9 +97,9 @@ model_S2=[];
 model_D2=[];
 model_C2=[];
 model_A2=[];
-hours=0.5;
-minutes=60;
-fault_hours=3;
+hours=.5;
+minutes=20;
+fault_hours=1;
 for i1=1:size(fault_class,1)
     date_str_end=fault_class{i1,1};
     eIndex=find(date0>datenum(date_str_end),1);    % end index
@@ -124,11 +122,12 @@ for i1=1:size(fault_class,1)
 end
 %}
 %显示转换矩阵的图像
-figure;
+figure('name',strcat('数据时段',num2str(fault_hours),'小时，模型长度',num2str(hours),'小时，跨度',num2str(minutes),'分钟'));
 for i1=1:size(model_A2,3)
     subplot(size(model_A2,3)/num_case,num_case,i1);
-    imagesc(abs(model_A2(:,:,i1)));
-    title(fault_class{mod(i1-1,8)+1,2});
+%     imagesc(abs(model_A2(:,:,i1)));
+    imagesc((model_A2(:,:,i1)));
+    title(fault_class{mod(i1-1,num_case)+1,2});
 end
 %% 计算相似度矩阵
 %{

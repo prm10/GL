@@ -5,12 +5,17 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
+
+hours=24*5;
+minutes=30;
 opt=struct(...
-    'date_str_begin','2012-03-16', ... %开始时间
-    'date_str_end','2013-03-16 18:19:10', ...   %结束时间
-    'len',360*24*1, ...%计算PCA所用时长范围
-    'step',360*1 ...
+    'date_str_begin','2013-02-24 23:57', ... %开始时间
+    'date_str_end','2013-02-27 16:45:14', ...   %结束时间
+    'len',360*hours, ...%计算PCA所用时长范围
+    'step',6*minutes ...
     );
+
+
 load(strcat(filepath,'data.mat'));
 data0=data0(:,commenDim{GL(gl_no)});% 选取共有变量
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index

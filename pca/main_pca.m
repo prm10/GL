@@ -7,11 +7,14 @@ plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 
+
+hours=24*5;
+minutes=30;
 opt=struct(...
-    'date_str_begin','2012-03-22 16:25', ... %开始时间
-    'date_str_end','2012-03-25 13:19:41', ...   %结束时间
-    'len',360*24*1, ...%计算PCA所用时长范围
-    'step',360*1 ...
+    'date_str_begin','2013-02-19 23:57', ... %开始时间
+    'date_str_end','2013-02-25 16:45:14', ...   %结束时间
+    'len',360*hours, ...%计算PCA所用时长范围
+    'step',6*minutes ...
     );
 
 load(strcat(filepath,'data.mat'));
@@ -44,12 +47,20 @@ SPE=zeros(T,1);
 T2_lim=zeros(T,1);
 SPE_lim=zeros(T,1);
 abnormal=false(T,1);
+% for model similarity
+T=length(loc);
+numDims=size(data0,2);
+model_P=zeros(numDims,numDims,T);
+model_E=zeros(numDims,T);
+model_D=zeros(T,1);
 
 trainset=data0(sIndex-opt.len+1:sIndex,:);
-
+M1=mean(trainset);
+S1=std(trainset,0,1);
+trainset_st=(trainset-ones(size(trainset,1),1)*M1)./(ones(size(trainset,1),1)*S1);
+[P,E]=pca(trainset_st);
 % sv_train=sv(sIndex-opt.len+1:sIndex);
 % trainset=trainset(~sv_train,:);
-
 N=size(data0,2);
 % pH=zeros(N,N,T);
 % eH=zeros(N,T);
@@ -67,18 +78,19 @@ for i1=1:length(loc)
 %     ns=ns(~sv1,:);      
     
 %     testset=testset(ns,:);     % filter abnormal state
-    
-    M1=mean(trainset);
-    S1=std(trainset,0,1);
-    trainset_st=(trainset-ones(size(trainset,1),1)*M1)./(ones(size(trainset,1),1)*S1);
-    testset_st=(testset-ones(size(testset,1),1)*M1)./(ones(size(testset,1),1)*S1);
+    M2=mean(trainset);
+    S2=std(trainset,0,1);
+
+    testset_st=(testset-ones(size(testset,1),1)*M2)./(ones(size(testset,1),1)*S1);
     data1_st=(data1-ones(size(data1,1),1)*M1)./(ones(size(data1,1),1)*S1);
-    [P,E]=pca(trainset_st);
-%     pH(:,:,i1)=P;
-%     eH(:,i1)=E;
+
+    [P2,E2]=pca(testset_st);
+    model_P(:,:,i1)=P2;
+    model_E(:,i1)=E2;
+    model_D(i1)=date0(t2);
     k=7;
-    [spe,t_2]=pca_indicater(data1_st,P,E,k);
-    [spe2,t_22]=pca_indicater(testset_st,P,E,k);
+    [spe,t_2]=pca_indicater(data1_st,P,E,k);%用于记录
+    [spe2,t_22]=pca_indicater(testset_st,P,E,k);%用于判断是否异常                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
     if i1==13
         i1;
     end
@@ -95,6 +107,10 @@ for i1=1:length(loc)
     n2=sum(normal);
     if n2>0
 %         trainset=[trainset(n2+1:end,:);testset(normal,:)];
+%         M1=mean(trainset);
+%         S1=std(trainset,0,1);
+%         trainset_st=(trainset-ones(size(trainset,1),1)*M1)./(ones(size(trainset,1),1)*S1);
+%         [P,E]=pca(trainset_st);
     end
     abnormal((t1:t2)-sIndex,1)=~normal;
     T2((t1:t2)-sIndex,1)=t_2;
@@ -104,18 +120,23 @@ for i1=1:length(loc)
 end
 toc;
 
+model_P=cat(3,P,model_P);
+model_E=cat(2,E,model_E);
+sim0=calculate_sim(model_P,model_E,3);
 %% 矩阵相似度分析
-% p=pH(:,:,2000)/pH(:,:,1);
-% imshow(p/norm(p));
-%{
-T=size(T2,1);
-range1=(1:T)*step/360/24;
-
-pH=directionUnify(pH);
-simi=simiMat(pH,eH);
+k_sim=4;
+sim=sim0(:,:,k_sim);
+n=size(sim,1);
 figure;
-plot(range1,simi);
-%}
+imagesc(sim);
+title('互相相似度');
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
+
+sim=sim0(2:end,1,k_sim);
+figure;
+plot(1:size(sim,1),sim);
+title('与训练集相似度');
 %% test
 %{
 i2=10;%1:length(input0)
@@ -157,14 +178,17 @@ plot(range1,SPE,range1,SPE_lim,'--');
 % plot(range1(ns&~sv1),SPE(ns&~sv1),range1(ns&~sv1),SPE_lim(ns&~sv1),'--');
 title('spe');
 %}
-%{
 %% original data
+%
+data1=data0(sIndex+1:eIndex,:);
+date1=date0(sIndex+1:eIndex,:);
 figure;
 T=size(data1,1);
-range2=(1:T)/360/24;
+% range2=(1:T)/360/24;
+range2=(1:T);
 for i1=1:6
     subplot(3,2,i1);
-    plot(range2,data1(:,ipt(i1)));
+    plot(1:T,data1(:,ipt(i1)));
     title(commenVar{ipt(i1)});
 end
 %}

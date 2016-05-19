@@ -6,6 +6,9 @@ p=p1(:,1:k)'*(p2(:,1:k)*p2(:,1:k)')*p1(:,1:k);
 % p=p1(:,1:k)'*p2(:,1:k);
 eig1=sort(eig(p),'descend');
 
+e1=e1/max(e1);
+e2=e2/max(e2);
+
 w1=diag(e1).^0.5;
 p=w1*p1'*(p2*diag(e2)*p2')*p1*w1;
 eig2=sort(eig(p),'descend');
