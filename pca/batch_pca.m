@@ -7,11 +7,11 @@ plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 window_hours=48;
-hours=2;
-minutes=30;
+hours=12;
+minutes=120;
 opt=struct(...
-    'date_str_begin','2013-03-04', ... %开始时间
-    'date_str_end','2013-03-06 07:19:32', ...   %结束时间
+    'date_str_begin','2012-10-20', ... %开始时间
+    'date_str_end','2012-11-01', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes, ...%步长
     'window',max(window_hours,hours)*360 ...
@@ -46,6 +46,7 @@ numDims=size(data0,2);
 model_P=zeros(numDims,numDims,T);
 model_E=zeros(numDims,T);
 model_M=zeros(numDims,T);
+model_C=zeros(numDims,numDims,T);
 model_S=zeros(numDims,T);
 model_D=zeros(T,1);
 ignore=0;
@@ -79,11 +80,12 @@ for i1=1:length(loc)
     M1=mean(data2);
     S1=std(data2,0,1);
     data_st=(data2-ones(size(data2,1),1)*M_window)./(ones(size(data2,1),1)*S0);
-    [P,E]=pca(data_st);
+    [P,E]=f_pca(data_st);
     model_P(:,:,i1-ignore)=P;
     model_E(:,i1-ignore)=E;
     model_D(i1-ignore)=date0(t2);
     model_M(:,i1-ignore)=M_window;
+    model_C(:,:,i1-ignore)=pinv(cov(data2));
     model_S(:,i1-ignore)=S1;
 end
 toc;
@@ -116,51 +118,52 @@ disp('begin to calculate similarity');
 tic;
 n=size(model_P,3);
 k=5;
-sim0=zeros(n,n);
-sim=zeros(n,n,k);
-for i1=1:n-1
-    for i2=i1+1:n
-%         [r1,result]=simN(pH(:,:,i1),pH(:,:,i2),eH(:,i1),eH(:,i2),k);
-        [r1,result]=simG(model_P(:,:,i1),model_P(:,:,i2),model_E(:,i1),model_E(:,i2),k);
-        sim(i1,i2,:)=result;
-        sim(i2,i1,:)=result;
-        sim0(i1,i2)=r1;
-        sim0(i2,i1)=r1;
+choice=2;
+S_lambda=zeros(n,n);
+S_dist=zeros(n,n);
+dist_map=load('dist_map.mat');
+for i1=1:n
+    P1=model_P(:,:,i1);
+    E1=model_E(:,i1);
+    M1=model_M(:,i1);
+    C1=model_C(:,:,i1);
+    for i2=i1:n
+        P2=model_P(:,:,i2);
+        E2=model_E(:,i2);
+        M2=model_M(:,i2);
+        C2=model_C(:,:,i2);
+        temp=f_calculate_similarity(choice,P1,P2,E1,E2,k);
+        S_lambda(i1,i2)=temp;
+        S_lambda(i2,i1)=temp;
+        delta_M=M1-M2;
+        temp=min(dist_map.range,sqrt(delta_M'*C1*delta_M));
+        S_dist(i1,i2)=dist_map.d(max(1,floor(temp/dist_map.range*dist_map.n)));
+%         S_dist(i1,i2)=2*(1-integral(@(x) exp(-x.^2/2),-100,temp)/sqrt(2*pi));
+        temp=min(dist_map.range,sqrt(delta_M'*C2*delta_M));
+%         S_dist(i2,i1)=2*(1-integral(@(x) exp(-x.^2/2),-100,temp)/sqrt(2*pi));
+        S_dist(i2,i1)=dist_map.d(max(1,floor(temp/dist_map.range*dist_map.n)));
     end
 end
-for i1=1:n
-    sim(i1,i1,:)=1;
-    sim0(i1,i1)=1;
-end
 toc;
-save('..\..\GL_data\batch_pca.mat','sim','sim0','model_D');
+save('..\..\GL_data\batch_pca.mat','S_lambda','model_D','S_dist');
 %}
 %% plot
 batch=load('..\..\GL_data\batch_pca.mat');
 % batch=load('..\..\GL_data\batch_pca_20121201_20130101_4h_20min_G.mat');
-%{
-%各个角度取平均
-for i1=1:k
-    sim(:,:,i1)=(sim(:,:,i1)-M_sim(i1))/S_sim(i1);
-end
-sim=mean(sim,3);
 
-%}
-
-for i1=1:k
-%取单个角度
-sim=real(batch.sim(:,:,i1));
-% sim=(sim-min(min(sim)))/(max(max(sim))-min(min(sim)));%归一化
-n=size(sim,1);
+n=size(batch.S_dist,1);
+alpha=0.5;
 figure;
-imagesc(sim);
+subplot(131);
+imagesc(batch.S_lambda);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
-end
-
-n=size(batch.sim0,1);
-figure;
-imagesc(batch.sim0);
+subplot(132);
+imagesc(batch.S_dist);
+axis equal;
+axis([.5,n+.5,.5,n+.5]);
+subplot(133);
+imagesc(alpha*batch.S_lambda+(1-alpha)*batch.S_dist);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
 %% 聚类
