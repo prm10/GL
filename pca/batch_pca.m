@@ -6,15 +6,15 @@ ipt=[7;8;13;17;20;24];
 plotvariable;
 gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
-window_hours=48;
+% window_hours=48;
 hours=12;
 minutes=120;
 opt=struct(...
-    'date_str_begin','2012-10-20', ... %开始时间
-    'date_str_end','2012-11-01', ...   %结束时间
+     ...%     'window',max(window_hours,hours)*360 ...
+    'date_str_begin','2012-09-20', ... %开始时间
+    'date_str_end','2012-11-20', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
-    'step',6*minutes, ...%步长
-    'window',max(window_hours,hours)*360 ...
+    'step',6*minutes  ...%步长
     );
 
 load(strcat(filepath,'data.mat'));
@@ -52,15 +52,15 @@ model_D=zeros(T,1);
 ignore=0;
 tic;
 for i1=1:length(loc)
-    t_window=sIndex+loc(i1)-opt.window+1;
+%     t_window=sIndex+loc(i1)-opt.window+1;
     t1=sIndex+loc(i1)-opt.len+1;
     t2=sIndex+loc(i1);
     data1=data0(t1:t2,:);
     
-    data_window=data0(t_window:t2,:);
-    ns0=normalState(t_window:t2,:);
-    data_window=data_window(ns0,:);
-    M_window=mean(data_window);
+%     data_window=data0(t_window:t2,:);
+%     ns0=normalState(t_window:t2,:);
+%     data_window=data_window(ns0,:);
+%     M_window=mean(data_window);
     ns=normalState(t1:t2,:);
 %     sv1=sv(t1:t2,:);
     data2=data1;         % no filter
@@ -72,19 +72,19 @@ for i1=1:length(loc)
     
     if size(data2,1)/size(data1,1)<0.5
         disp(strcat('abnormal index: ',num2str(t1),':',num2str(t2)));
-        disp(strcat('abnormal rate: ',num2str(size(data2,1)/size(data1,1))));
+        disp(strcat('abnormal rate: ',num2str(1-size(data2,1)/size(data1,1))));
         ignore=ignore+1;
         continue;
     end
 
     M1=mean(data2);
     S1=std(data2,0,1);
-    data_st=(data2-ones(size(data2,1),1)*M_window)./(ones(size(data2,1),1)*S0);
+    data_st=(data2-ones(size(data2,1),1)*M1)./(ones(size(data2,1),1)*S0);
     [P,E]=f_pca(data_st);
     model_P(:,:,i1-ignore)=P;
     model_E(:,i1-ignore)=E;
     model_D(i1-ignore)=date0(t2);
-    model_M(:,i1-ignore)=M_window;
+    model_M(:,i1-ignore)=M1;
     model_C(:,:,i1-ignore)=pinv(cov(data2));
     model_S(:,i1-ignore)=S1;
 end
