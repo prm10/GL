@@ -8,11 +8,11 @@ gl_no=2;%高炉编号
 filepath=strcat('..\..\GL_data\',num2str(No(gl_no)),'\');
 % window_hours=48;
 hours=12;
-minutes=120;
+minutes=6*60;
 opt=struct(...
      ...%     'window',max(window_hours,hours)*360 ...
-    'date_str_begin','2012-09-20', ... %开始时间
-    'date_str_end','2012-11-20', ...   %结束时间
+    'date_str_begin','2012-11-20', ... %开始时间
+    'date_str_end','2012-12-21', ...   %结束时间
     'len',360*hours, ...%计算PCA所用时长范围
     'step',6*minutes  ...%步长
     );
@@ -35,6 +35,14 @@ normalState=...
     & data0(:,8)>20     ...
     & data0(:,20)<450   ...
     & data0(:,7)>2000;
+
+% 除去状态漂移的变量：鼓风湿度
+% data0=data0(:,1:end-1);
+% 除去状态漂移的变量：富氧
+filter_drift=[2:6,8:13,15:24];
+data0=data0(:,filter_drift);
+
+
 S0=std(data0(normalState,:));
 sIndex=find(date0>datenum(opt.date_str_begin),1);  % start index
 eIndex=find(date0>datenum(opt.date_str_end),1);    % end index
@@ -99,7 +107,7 @@ disp(strcat('samples ignored: ',num2str(ignore)));
 disp(strcat('models generated: ',num2str(length(model_D))));
 %}
 %% original data
-%
+%{
 data1=data0(sIndex+1:eIndex,:);
 figure;
 T=size(data1,1);
@@ -122,7 +130,9 @@ choice=2;
 S_lambda=zeros(n,n);
 S_dist=zeros(n,n);
 dist_map=load('dist_map.mat');
+h=waitbar(0,['finish: 0/',num2str(n)]);
 for i1=1:n
+    waitbar(i1/n,h,['finish: ',num2str(i1),'/',num2str(n)]);
     P1=model_P(:,:,i1);
     E1=model_E(:,i1);
     M1=model_M(:,i1);
@@ -136,15 +146,29 @@ for i1=1:n
         S_lambda(i1,i2)=temp;
         S_lambda(i2,i1)=temp;
         delta_M=M1-M2;
+        dist_map.range=10;
         temp=min(dist_map.range,sqrt(delta_M'*C1*delta_M));
-        S_dist(i1,i2)=dist_map.d(max(1,floor(temp/dist_map.range*dist_map.n)));
+        S_dist(i1,i2)=dist_map.range-temp;
 %         S_dist(i1,i2)=2*(1-integral(@(x) exp(-x.^2/2),-100,temp)/sqrt(2*pi));
+%         S_dist(i1,i2)=dist_map.d(max(1,floor(temp/dist_map.range*dist_map.n)));
         temp=min(dist_map.range,sqrt(delta_M'*C2*delta_M));
+        S_dist(i2,i1)=dist_map.range-temp;
+%         S_dist(i2,i1)=dist_map.d(max(1,floor(temp/dist_map.range*dist_map.n)));
 %         S_dist(i2,i1)=2*(1-integral(@(x) exp(-x.^2/2),-100,temp)/sqrt(2*pi));
-        S_dist(i2,i1)=dist_map.d(max(1,floor(temp/dist_map.range*dist_map.n)));
     end
 end
+close(h);
 toc;
+
+% % 查看协方差矩阵
+% figure;imagesc(model_C(:,:,60));axis equal;axis([.5,size(model_C,1)+.5,.5,size(model_C,1)+.5]);
+% % 查看协方差矩阵分布
+% x=abs(model_C(:));
+% x=min(x,100*ones(size(x)));
+% figure;hist(x,1:100);
+% % 查看距离分布
+figure;hist(S_dist(:),100);
+
 save('..\..\GL_data\batch_pca.mat','S_lambda','model_D','S_dist');
 %}
 %% plot
@@ -166,6 +190,7 @@ subplot(133);
 imagesc(alpha*batch.S_lambda+(1-alpha)*batch.S_dist);
 axis equal;
 axis([.5,n+.5,.5,n+.5]);
+
 %% 聚类
 %{
 load('..\..\GL_data\batch_pca.mat');
